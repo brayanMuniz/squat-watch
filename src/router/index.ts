@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Upload from "../views/Upload.vue";
+import CreateAccount from "@/views/CreateAccount.vue";
 
 Vue.use(VueRouter);
 
@@ -15,6 +16,11 @@ const routes: Array<RouteConfig> = [
     path: "/upload",
     name: "Upload",
     component: Upload,
+  },
+  {
+    path: "/createAccount",
+    name: "Create Account",
+    component: CreateAccount,
   },
 ];
 

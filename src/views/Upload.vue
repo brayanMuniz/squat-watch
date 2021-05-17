@@ -1,9 +1,60 @@
 <template>
   <div>
-    <h1>This is where you will upload the videos</h1>
-    <form @submit.prevent="uploadVideo">
+    <h1>This is where you will upload the Workout</h1>
+
+    <form @submit.prevent="uploadWorkout">
       <div class="form-group">
-        <label for="Starting Amount">Select A File for Profile Image:</label>
+        <label for="Workout Name">Workout Name: </label>
+        <input
+          v-model.trim="workoutName"
+          type="text"
+          class="form-control"
+          id="workoutName"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="Workout Name">Date: </label>
+        <input
+          v-model.trim="workoutDate"
+          type="date"
+          class="form-control"
+          id="workoutDate"
+        />
+      </div>
+
+      <!-- TODO: add a length type -->
+      <!-- TODO: Figure out what time type is valid on all browsers-->
+
+      <!-- TODO: programatically open new exercises  -->
+      <!-- TODO: Make @addExercise, create a new object that will be added to exercise  -->
+      <!-- ? How would i bind it to that?  -->
+      <div class="form-group">
+        <label for="Exercise1">Exercise Name: </label>
+        <input
+          v-model.trim="tempExercise.ExerciseName"
+          type="text"
+          class="form-control"
+        />
+        <br />
+        <label for="Exercise1">Weight </label>
+        <input
+          v-model="tempExercise.Sets[0].Weight"
+          type="number"
+          class="form-control"
+        />
+        <label for="Exercise1">Reps </label>
+        <input
+          v-model="tempExercise.Sets[0].Reps"
+          type="number"
+          class="form-control"
+        />
+      </div>
+
+
+      <div class="form-group">
+        <label for="Starting Amount">Select A Video to upload</label> <br />
+
         <input
           ref="upload"
           name="file-upload"
@@ -22,10 +73,18 @@
 <script lang="ts">
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
+import { Workout } from "@/interfaces/workout.interface";
 export default Vue.extend({
   data() {
     return {
       videoUpload: new Blob(),
+      workoutName: "",
+      Length: 0,
+      workoutDate: new Date(),
+      tempExercise: {
+        ExerciseName: "",
+        Sets: [{ Weight: 0, Reps: 0 }],
+      },
     };
   },
   async mounted() {
@@ -57,6 +116,22 @@ export default Vue.extend({
         alert("Something is wrong. Hold up.");
       } else {
         this.uploadProfilePicture(myUid);
+      }
+    },
+    uploadWorkout() {
+      const myUid: string | undefined = firebaseApp.auth().currentUser?.uid;
+      if (myUid == undefined) {
+        alert("You are not signed in.");
+      } else {
+        // Check if all the properties in workout are correct
+        // if correct upload to Doc users/date 2. Add video url after
+        // else dont upload
+        let workout: Workout = {
+          Name: this.workoutName,
+          Date: new Date(),
+          Exercises: [this.tempExercise],
+        };
+        console.log(workout);
       }
     },
   },

@@ -1,5 +1,7 @@
 <template>
   <div class="home">
+    <button @click="signOut">Sign Out</button>
+
     <div>Chart</div>
     <video v-if="videoReady" ref="videoPlayer">
       <source :src="videoUrl" />
@@ -40,6 +42,17 @@ export default Vue.extend({
       });
   },
   methods: {
+    async signOut() {
+      await firebaseApp
+        .auth()
+        .signOut()
+        .then(() => {
+          console.log("User was signed out");
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    },
     playVid() {
       this.$refs["videoPlayer"].play();
     },

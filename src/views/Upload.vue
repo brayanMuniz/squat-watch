@@ -51,7 +51,6 @@
         />
       </div>
 
-
       <div class="form-group">
         <label for="Starting Amount">Select A Video to upload</label> <br />
 
@@ -74,6 +73,7 @@
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import { Workout } from "@/interfaces/workout.interface";
+import moment from "moment";
 export default Vue.extend({
   data() {
     return {
@@ -118,19 +118,39 @@ export default Vue.extend({
         this.uploadProfilePicture(myUid);
       }
     },
-    uploadWorkout() {
+    async uploadWorkout() {
       const myUid: string | undefined = firebaseApp.auth().currentUser?.uid;
       if (myUid == undefined) {
         alert("You are not signed in.");
       } else {
-        // Check if all the properties in workout are correct
-        // if correct upload to Doc users/date 2. Add video url after
-        // else dont upload
+        // Create workout object
         let workout: Workout = {
           Name: this.workoutName,
           Date: new Date(),
           Exercises: [this.tempExercise],
         };
+
+        // Date in DD-MM-YYYY
+        let formattedDate = moment(workout.Date).format("MM-DD-YYYY");
+
+        // Sets path to document
+        const userFirestoreWorkoutPath = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(myUid)
+          .collection("workouts")
+          .doc(formattedDate);
+
+        // Sets object into document
+        await userFirestoreWorkoutPath
+          .set(workout)
+          .then((res) => {
+            console.log(res);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+
         console.log(workout);
       }
     },

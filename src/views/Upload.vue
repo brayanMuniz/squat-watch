@@ -126,7 +126,7 @@ export default Vue.extend({
         // Create workout object
         let workout: Workout = {
           Name: this.workoutName,
-          Date: new Date(),
+          Date: this.workoutDate,
           Exercises: [this.tempExercise],
         };
 

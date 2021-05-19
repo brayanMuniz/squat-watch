@@ -32,20 +32,20 @@
       <div class="form-group">
         <label for="Exercise1">Exercise Name: </label>
         <input
-          v-model.trim="tempExercise.ExerciseName"
+          v-model.trim="tempExercise.exerciseName"
           type="text"
           class="form-control"
         />
         <br />
         <label for="Exercise1">Weight </label>
         <input
-          v-model="tempExercise.Sets[0].Weight"
+          v-model="tempExercise.sets[0].weight"
           type="number"
           class="form-control"
         />
         <label for="Exercise1">Reps </label>
         <input
-          v-model="tempExercise.Sets[0].Reps"
+          v-model="tempExercise.sets[0].reps"
           type="number"
           class="form-control"
         />
@@ -82,8 +82,8 @@ export default Vue.extend({
       Length: 0,
       workoutDate: new Date(),
       tempExercise: {
-        ExerciseName: "",
-        Sets: [{ Weight: 0, Reps: 0 }],
+        exerciseName: "",
+        sets: [{ weight: 0, reps: 0 }],
       },
     };
   },
@@ -125,13 +125,13 @@ export default Vue.extend({
       } else {
         // Create workout object
         let workout: Workout = {
-          Name: this.workoutName,
-          Date: this.workoutDate,
-          Exercises: [this.tempExercise],
+          name: this.workoutName,
+          date: moment(this.workoutDate).format("MM-DD-YYYY"),
+          exercises: [this.tempExercise],
         };
 
         // Date in DD-MM-YYYY
-        let formattedDate = moment(workout.Date).format("MM-DD-YYYY");
+        let formattedDate = moment(workout.date).format("MM-DD-YYYY");
 
         // Sets path to document
         const userFirestoreWorkoutPath = firebaseApp

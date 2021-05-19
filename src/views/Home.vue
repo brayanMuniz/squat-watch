@@ -29,10 +29,9 @@ export default Vue.extend({
     };
   },
   async mounted() {
-
+    await this.retriveWorkoutData();
 
     // this is the actual name of the video NOT the url link
-    this.retriveWorkoutData();
     // const testVideo = "redditsave.com_numa_numa-t8vuqusl0fm61.mp4";
     // let testVideRef = firebaseApp.storage().ref(testVideo);
     // await testVideRef
@@ -82,8 +81,26 @@ export default Vue.extend({
         "05/10/2021",
         "05/14/2021"
       );
-      firebaseApp.firestore().collection("users").doc()
 
+      const myUID: string | undefined = firebaseApp.auth().currentUser?.uid;
+      if (myUID != undefined) {
+        await firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(myUID)
+          .collection("workouts")
+          .get()
+          .then((res) => {
+            if (!res.empty) {
+              res.forEach((doc) => {
+                console.log(doc.data());
+              });
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
     },
     playVid() {
       this.$refs["videoPlayer"].play();

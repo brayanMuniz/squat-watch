@@ -36,4 +36,5 @@ export interface Exercise {
 export interface WorkingSet {
   weight: number;
   reps: number;
+  videoUrl?: string;
 }

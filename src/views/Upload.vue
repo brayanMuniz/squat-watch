@@ -23,12 +23,15 @@
         />
       </div>
 
-      <!-- TODO: add a length type -->
+      <br />
+      <!-- TODO: add a length type to show how long workout was  -->
       <!-- TODO: Figure out what time type is valid on all browsers-->
 
       <!-- TODO: programatically open new exercises  -->
       <!-- TODO: Make @addExercise, create a new object that will be added to exercise  -->
       <!-- ? How would i bind it to that?  -->
+
+      <!-- EXERCISE ==================================== -->
       <div class="form-group">
         <label for="Exercise1">Exercise Name: </label>
         <input
@@ -37,33 +40,34 @@
           class="form-control"
         />
         <br />
-        <label for="Exercise1">Weight </label>
-        <input
-          v-model="tempExercise.sets[0].weight"
-          type="number"
-          class="form-control"
-        />
-        <label for="Exercise1">Reps </label>
-        <input
-          v-model="tempExercise.sets[0].reps"
-          type="number"
-          class="form-control"
-        />
+        <!-- SET ============== -->
+        <div>
+          <label for="Exercise1">Weight </label>
+          <input
+            v-model="tempExercise.sets[0].weight"
+            type="number"
+            class="form-control"
+          />
+          <label for="Exercise1">Reps </label>
+          <input
+            v-model="tempExercise.sets[0].reps"
+            type="number"
+            class="form-control"
+          />
+          <label for="Starting Amount">Select A Video to with Set.</label>
+          <br />
+
+          <input
+            ref="upload"
+            name="file-upload"
+            @change="previewFiles"
+            type="file"
+            class="form-control"
+            id="Profile Image"
+          />
+        </div>
+
       </div>
-
-      <div class="form-group">
-        <label for="Starting Amount">Select A Video to upload</label> <br />
-
-        <input
-          ref="upload"
-          name="file-upload"
-          @change="previewFiles"
-          type="file"
-          class="form-control"
-          id="Profile Image"
-        />
-      </div>
-
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
   </div>
@@ -79,11 +83,11 @@ export default Vue.extend({
     return {
       videoUpload: new Blob(),
       workoutName: "",
-      Length: 0,
-      workoutDate: new Date(),
+      length: 0,
+      workoutDate: "",
       tempExercise: {
         exerciseName: "",
-        sets: [{ weight: 0, reps: 0 }],
+        sets: [{ weight: 0, reps: 0, videoUrl: "" }],
       },
     };
   },
@@ -95,11 +99,9 @@ export default Vue.extend({
   methods: {
     previewFiles(event: any): void {
       this.videoUpload = event.target.files[0];
-      console.log(this.videoUpload);
     },
-    async uploadProfilePicture(myUid: string) {
+    async uploadVideoSet(myUid: string) {
       if (this.videoUpload) {
-        // TODO: Update this later to have the correct data format
         let fileNamePlaceHolder = "testUpload";
         const imageUserRef = firebaseApp
           .storage()
@@ -110,23 +112,19 @@ export default Vue.extend({
         });
       }
     },
-    uploadVideo() {
-      const myUid: string | undefined = firebaseApp.auth().currentUser?.uid;
-      if (myUid == undefined) {
-        alert("Something is wrong. Hold up.");
-      } else {
-        this.uploadProfilePicture(myUid);
-      }
-    },
+    // docLocation is essentially the date or docId
+    // setLocation would have to be an obj to get good configuration
     async uploadWorkout() {
       const myUid: string | undefined = firebaseApp.auth().currentUser?.uid;
       if (myUid == undefined) {
         alert("You are not signed in.");
       } else {
+        // With a batch multiple writes are able to be committed at once
+        let batch = firebaseApp.firestore().batch();
         // Create workout object
         let workout: Workout = {
           name: this.workoutName,
-          date: moment(this.workoutDate).format("MM-DD-YYYY"),
+          date: this.workoutDate,
           exercises: [this.tempExercise],
         };
 
@@ -141,17 +139,35 @@ export default Vue.extend({
           .collection("workouts")
           .doc(formattedDate);
 
-        // Sets object into document
-        await userFirestoreWorkoutPath
-          .set(workout)
-          .then((res) => {
-            console.log(res);
-          })
-          .catch((err) => {
-            console.error(err);
-          });
+        // batch.set(userFirestoreWorkoutPath, workout);
 
-        console.log(workout);
+        if (this.videoUpload) {
+          let fileNamePlaceHolder = formattedDate;
+          const imageUserRef = firebaseApp
+            .storage()
+            .ref(`users/${myUid}/${fileNamePlaceHolder}`);
+
+          await imageUserRef.put(this.videoUpload);
+
+          await imageUserRef
+            .getDownloadURL()
+            .then((downloadUrl) => {
+              workout.exercises[0].sets[0].videoUrl = downloadUrl;
+              batch.set(userFirestoreWorkoutPath, workout);
+            })
+            .catch((err) => {
+              console.error(err);
+            });
+
+          batch
+            .commit()
+            .then(() => {
+              console.log("It worked?");
+            })
+            .catch(() => {
+              console.error("Batch no good SADGE :(");
+            });
+        }
       }
     },
   },

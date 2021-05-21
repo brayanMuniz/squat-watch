@@ -10,6 +10,7 @@
       <button @click="playVid" type="button">Play Vid</button>
       <button @click="pauseVid" type="button">Pause Vid</button>
     </div>
+    {{ fireStoreWorkouts }}
 
     <div>Stats</div>
   </div>
@@ -27,10 +28,15 @@ export default Vue.extend({
     return {
       videoReady: false,
       videoUrl: "",
+      fireStoreWorkouts: new Array<Workout>(),
     };
   },
-  async mounted() {
-    await this.retriveWorkoutData();
+  async created() {
+    firebaseApp.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        await this.retriveWorkoutData("05/10/2021", "05/14/2021");
+      }
+    });
 
     // this is the actual name of the video NOT the url link
     // const testVideo = "redditsave.com_numa_numa-t8vuqusl0fm61.mp4";
@@ -78,16 +84,18 @@ export default Vue.extend({
       return dates;
     },
 
-    // if startDate not provided, gets data from one week ago to now
     async retriveWorkoutData(startDate?: string, endDate?: string) {
-      let workouts: Array<Workout> = [];
-      let dates: Array<string> = this.generateArrayOfDates(
-        "05/10/2021",
-        "05/14/2021"
-      );
+      let dates: Array<string> = [];
 
-      // Todo: Make a custom workout object to be able to convert from firebase data to my formatted data
-      // ? Do i place custom workout object in workout interface or make a new file for it ?
+      // if startDate not provided, gets data from one week ago to now
+      if (startDate && endDate) {
+        dates = this.generateArrayOfDates(startDate, endDate);
+      } else {
+        dates = this.generateArrayOfDates(
+          moment().subtract(1, "week").format("MM-DD-YYYY"),
+          moment().format("MM-DD-YYYY")
+        );
+      }
 
       const myUID: string | undefined = firebaseApp.auth().currentUser?.uid;
       if (myUID != undefined) {
@@ -97,6 +105,7 @@ export default Vue.extend({
           .doc(myUID)
           .collection("workouts");
 
+        // ? Do i place custom workout object in workout interface or make a new file for it ?
         let workoutConverter = {
           toFirestore: function (workout: Workout) {
             return {
@@ -108,30 +117,26 @@ export default Vue.extend({
           },
           fromFireStore: function (doc: any) {
             const data = doc.data();
-            console.log(data)
-            return new Workout(
-              data.name,
-              doc.id,
-              data.exercises,
-              data.length
-            );
+            console.log(data);
+            return new Workout(data.name, doc.id, data.exercises, data.length);
           },
         };
 
-        for (let date in dates) {
+        dates.forEach(async (date) => {
           await workoutPath
-            .doc(dates[date])
+            .doc(date)
             .get()
             .then((doc) => {
               if (doc.exists) {
-                workouts.push(workoutConverter.fromFireStore(doc));
+                this.fireStoreWorkouts.push(
+                  workoutConverter.fromFireStore(doc)
+                );
               }
             })
             .catch((err) => {
               console.error(err);
             });
-        }
-        console.log(workouts);
+        });
       }
     },
     playVid() {

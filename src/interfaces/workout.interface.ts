@@ -1,16 +1,40 @@
+export class Workout {
+  name: string;
+  date: string;
+  exercises: Array<Exercise>;
+  length?: number;
+
+  constructor(
+    name: string,
+    date: string,
+    exercises: Array<Exercise>,
+    length?: number
+  ) {
+    this.name = name;
+    this.date = date;
+    this.exercises = exercises;
+
+    if (length) this.length = length;
+    else this.length = 0;
+  }
+
+
+}
+
 export interface Workout {
-  Name: String;
-  Date: Date;
-  Length?: Number;
-  Exercises: Array<Exercise>;
+  name: string;
+  date: string;
+  length?: number | undefined;
+  exercises: Array<Exercise>;
 }
 
 export interface Exercise {
-  ExerciseName: String;
-  Sets: Array<WorkingSet>;
+  exerciseName: string;
+  sets: Array<WorkingSet>;
 }
 
 export interface WorkingSet {
-  Weight: Number;
-  Reps: Number;
+  weight: number;
+  reps: number;
+  videoUrl?: string;
 }

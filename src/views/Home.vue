@@ -2,6 +2,8 @@
   <div class="home">
     <button @click="signOut">Sign Out</button>
 
+    <BarChart :chartData="dataCollection" />
+
     <div>Chart</div>
     <div v-if="videoReady">
       <video ref="videoPlayer">
@@ -21,6 +23,9 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import { Workout } from "@/interfaces/workout.interface";
+// Since chartjs 3.0 came out i kept getting errors but this person fixed it for me lol thx
+// https://github.com/apertureless/vue-chartjs/issues/695#issuecomment-813059967
+import BarChart from "@/components/LineChart";
 
 export default Vue.extend({
   name: "Home",
@@ -29,12 +34,14 @@ export default Vue.extend({
       videoReady: false,
       videoUrl: "",
       fireStoreWorkouts: new Array<Workout>(),
+      dataCollection: {},
     };
   },
   async created() {
+    this.fillData();
     firebaseApp.auth().onAuthStateChanged(async (user) => {
       if (user) {
-        await this.retriveWorkoutData("05/10/2021", "05/14/2021");
+        // await this.retriveWorkoutData("05/10/2021", "05/14/2021");
       }
     });
 
@@ -139,12 +146,36 @@ export default Vue.extend({
         });
       }
     },
+
+    fillData() {
+      this.dataCollection = {
+        labels: [this.getRandomInt(), this.getRandomInt()],
+        datasets: [
+          {
+            label: "Data One",
+            backgroundColor: "#f87979",
+            data: [this.getRandomInt(), this.getRandomInt()],
+          },
+          {
+            label: "Data One",
+            backgroundColor: "#f87979",
+            data: [this.getRandomInt(), this.getRandomInt()],
+          },
+        ],
+      };
+    },
+    getRandomInt() {
+      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
+    },
     playVid() {
       this.$refs["videoPlayer"].play();
     },
     pauseVid() {
       this.$refs["videoPlayer"].pause();
     },
+  },
+  components: {
+    BarChart,
   },
 });
 </script>

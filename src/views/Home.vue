@@ -2,7 +2,13 @@
   <div class="home">
     <button @click="signOut">Sign Out</button>
 
-    <BarChart :chartData="dataCollection" />
+    <div>
+      <BarChart
+        :chartData="dataCollection"
+        :options="chartOptions"
+        v-on:clickedPoint="pointClicked($event)"
+      />
+    </div>
 
     <div>Chart</div>
     <div v-if="videoReady">
@@ -23,6 +29,7 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import { Workout } from "@/interfaces/workout.interface";
+import { ChartData } from "chart.js";
 // Since chartjs 3.0 came out i kept getting errors but this person fixed it for me lol thx
 // https://github.com/apertureless/vue-chartjs/issues/695#issuecomment-813059967
 import BarChart from "@/components/LineChart";
@@ -35,6 +42,10 @@ export default Vue.extend({
       videoUrl: "",
       fireStoreWorkouts: new Array<Workout>(),
       dataCollection: {},
+      chartOptions: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
     };
   },
   async created() {
@@ -146,23 +157,42 @@ export default Vue.extend({
         });
       }
     },
+    // https://stackoverflow.com/a/32646716/11567132
+    pointClicked(data: any) {
+      // `Label point is: datasetIndex ${activeElements[0]._datasetIndex}, and index: ${activeElements[0]._index}`
+      //   `DataSetPoint is: datasetIndex ${activeElements[1]._datasetIndex}, and index: ${activeElements[0]._index}`
+      console.log(data);
+    },
 
     fillData() {
-      this.dataCollection = {
-        labels: [this.getRandomInt(), this.getRandomInt()],
+      let data: ChartData = {
+        labels: [1, 2, 3],
         datasets: [
           {
             label: "Data One",
-            backgroundColor: "#f87979",
-            data: [this.getRandomInt(), this.getRandomInt()],
+            data: [
+              this.getRandomInt(),
+              this.getRandomInt(),
+              this.getRandomInt(),
+            ],
+            fill: false,
+            borderColor: "rgb(75, 192, 192)",
           },
           {
-            label: "Data One",
-            backgroundColor: "#f87979",
-            data: [this.getRandomInt(), this.getRandomInt()],
+            label: "Data Two",
+            data: [
+              this.getRandomInt(),
+              this.getRandomInt(),
+              this.getRandomInt(),
+            ],
+            borderColor: "rgb(75, 192, 192)",
+            fill: false,
           },
         ],
       };
+      console.log(data);
+
+      this.dataCollection = data;
     },
     getRandomInt() {
       return Math.floor(Math.random() * (50 - 5 + 1)) + 5;

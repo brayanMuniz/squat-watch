@@ -9,7 +9,6 @@ export default class LineChart extends Mixins(mixins.reactiveProp, Line) {
   @Prop() readonly options?: ChartOptions | undefined;
 
   mounted() {
-    console.log(this.options);
     if (this.options) {
       // Adds the onClick function to transmit data to the parent component
       const totalOptions = this.options;
@@ -17,16 +16,15 @@ export default class LineChart extends Mixins(mixins.reactiveProp, Line) {
         event?: MouseEvent | undefined,
         activeElements?
       ) => {
-        console.log("NEW POINT CLICKED");
+        let data = {};
 
-        const data = { labelPoint: {}, dataSetPoint: {} };
-
+        // if there are no activeElements a random part of the chart was clicked
         if (activeElements) {
-          if (activeElements[0]) data.labelPoint = activeElements[0];
-          if (activeElements[1]) data.dataSetPoint = activeElements[1];
+          if (activeElements.length > 0) {
+            if (activeElements[0]) data = activeElements[0];
+            this.$emit("clickedPoint", data);
+          }
         }
-
-        this.$emit("clickedPoint", data);
       };
 
       this.renderChart(this.chartData, totalOptions);

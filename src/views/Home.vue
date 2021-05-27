@@ -3,6 +3,7 @@
     <button @click="signOut">Sign Out</button>
 
     <div>
+      <!-- :options prop needs to be passed in or there will be an error -->
       <BarChart
         :chartData="dataCollection"
         :options="chartOptions"
@@ -29,10 +30,11 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import { Workout } from "@/interfaces/workout.interface";
-import { ChartData } from "chart.js";
+import { ChartData, ChartPoint } from "chart.js";
 // Since chartjs 3.0 came out i kept getting errors but this person fixed it for me lol thx
 // https://github.com/apertureless/vue-chartjs/issues/695#issuecomment-813059967
 import BarChart from "@/components/LineChart";
+import { Moment } from "moment";
 
 export default Vue.extend({
   name: "Home",
@@ -41,7 +43,7 @@ export default Vue.extend({
       videoReady: false,
       videoUrl: "",
       fireStoreWorkouts: new Array<Workout>(),
-      dataCollection: {},
+      dataCollection: Object as ChartData,
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
@@ -157,11 +159,33 @@ export default Vue.extend({
         });
       }
     },
-    // https://stackoverflow.com/a/32646716/11567132
+    // ! IF YOU HAVE MULTIPLE DATA SETS YOU ARE NOT ABLE TO TELL WHICH DATA POINT YOU PICKED, SO I WILL STICK TO ONE DATA POINT
     pointClicked(data: any) {
-      // `Label point is: datasetIndex ${activeElements[0]._datasetIndex}, and index: ${activeElements[0]._index}`
-      //   `DataSetPoint is: datasetIndex ${activeElements[1]._datasetIndex}, and index: ${activeElements[0]._index}`
-      console.log(data);
+      let idx: number | undefined = data._index;
+      let label:
+        | string
+        | number
+        | string[]
+        | Moment
+        | Date
+        | number[]
+        | Date[]
+        | Moment[] = 0;
+
+      let dataPoint: number | number[] | ChartPoint | null | undefined = 0;
+
+      if (idx !== undefined) {
+        // Get the label
+        if (this.dataCollection.labels) label = this.dataCollection.labels[idx];
+
+        // Get the datapoint
+        if (this.dataCollection.datasets !== undefined) {
+          // since you will only be checking on one dataset you can just go to dataset 0. The first and only one
+          if (this.dataCollection.datasets[0].data !== undefined)
+            dataPoint = this.dataCollection.datasets[0].data[idx];
+        }
+      }
+      console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
     },
 
     fillData() {
@@ -176,20 +200,11 @@ export default Vue.extend({
               this.getRandomInt(),
             ],
             fill: false,
-            borderColor: "rgb(75, 192, 192)",
-          },
-          {
-            label: "Data Two",
-            data: [
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-            ],
-            borderColor: "rgb(75, 192, 192)",
-            fill: false,
+            borderColor: "red",
           },
         ],
       };
+      console.log("Chart Data below. ")
       console.log(data);
 
       this.dataCollection = data;

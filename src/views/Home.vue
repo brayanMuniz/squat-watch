@@ -2,6 +2,15 @@
   <div class="home">
     <button @click="signOut">Sign Out</button>
 
+    <div>
+      <!-- :options prop needs to be passed in or there will be an error -->
+      <BarChart
+        :chartData="dataCollection"
+        :options="chartOptions"
+        v-on:clickedPoint="pointClicked($event)"
+      />
+    </div>
+
     <div>Chart</div>
     <div v-if="videoReady">
       <video ref="videoPlayer">
@@ -10,6 +19,7 @@
       <button @click="playVid" type="button">Play Vid</button>
       <button @click="pauseVid" type="button">Pause Vid</button>
     </div>
+    {{ fireStoreWorkouts }}
 
     <div>Stats</div>
   </div>
@@ -20,6 +30,11 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import { Workout } from "@/interfaces/workout.interface";
+import { ChartData, ChartPoint } from "chart.js";
+// Since chartjs 3.0 came out i kept getting errors but this person fixed it for me lol thx
+// https://github.com/apertureless/vue-chartjs/issues/695#issuecomment-813059967
+import BarChart from "@/components/LineChart";
+import { Moment } from "moment";
 
 export default Vue.extend({
   name: "Home",
@@ -27,10 +42,21 @@ export default Vue.extend({
     return {
       videoReady: false,
       videoUrl: "",
+      fireStoreWorkouts: new Array<Workout>(),
+      dataCollection: Object as ChartData,
+      chartOptions: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
     };
   },
-  async mounted() {
-    await this.retriveWorkoutData();
+  async created() {
+    this.fillData();
+    firebaseApp.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        // await this.retriveWorkoutData("05/10/2021", "05/14/2021");
+      }
+    });
 
     // this is the actual name of the video NOT the url link
     // const testVideo = "redditsave.com_numa_numa-t8vuqusl0fm61.mp4";
@@ -78,16 +104,18 @@ export default Vue.extend({
       return dates;
     },
 
-    // if startDate not provided, gets data from one week ago to now
     async retriveWorkoutData(startDate?: string, endDate?: string) {
-      let workouts: Array<Workout> = [];
-      let dates: Array<string> = this.generateArrayOfDates(
-        "05/10/2021",
-        "05/14/2021"
-      );
+      let dates: Array<string> = [];
 
-      // Todo: Make a custom workout object to be able to convert from firebase data to my formatted data
-      // ? Do i place custom workout object in workout interface or make a new file for it ?
+      // if startDate not provided, gets data from one week ago to now
+      if (startDate && endDate) {
+        dates = this.generateArrayOfDates(startDate, endDate);
+      } else {
+        dates = this.generateArrayOfDates(
+          moment().subtract(1, "week").format("MM-DD-YYYY"),
+          moment().format("MM-DD-YYYY")
+        );
+      }
 
       const myUID: string | undefined = firebaseApp.auth().currentUser?.uid;
       if (myUID != undefined) {
@@ -97,6 +125,7 @@ export default Vue.extend({
           .doc(myUID)
           .collection("workouts");
 
+        // ? Do i place custom workout object in workout interface or make a new file for it ?
         let workoutConverter = {
           toFirestore: function (workout: Workout) {
             return {
@@ -108,31 +137,80 @@ export default Vue.extend({
           },
           fromFireStore: function (doc: any) {
             const data = doc.data();
-            console.log(data)
-            return new Workout(
-              data.name,
-              doc.id,
-              data.exercises,
-              data.length
-            );
+            console.log(data);
+            return new Workout(data.name, doc.id, data.exercises, data.length);
           },
         };
 
-        for (let date in dates) {
+        dates.forEach(async (date) => {
           await workoutPath
-            .doc(dates[date])
+            .doc(date)
             .get()
             .then((doc) => {
               if (doc.exists) {
-                workouts.push(workoutConverter.fromFireStore(doc));
+                this.fireStoreWorkouts.push(
+                  workoutConverter.fromFireStore(doc)
+                );
               }
             })
             .catch((err) => {
               console.error(err);
             });
-        }
-        console.log(workouts);
+        });
       }
+    },
+    // ! IF YOU HAVE MULTIPLE DATA SETS YOU ARE NOT ABLE TO TELL WHICH DATA POINT YOU PICKED, SO I WILL STICK TO ONE DATA POINT
+    pointClicked(data: any) {
+      let idx: number | undefined = data._index;
+      let label:
+        | string
+        | number
+        | string[]
+        | Moment
+        | Date
+        | number[]
+        | Date[]
+        | Moment[] = 0;
+
+      let dataPoint: number | number[] | ChartPoint | null | undefined = 0;
+
+      if (idx !== undefined) {
+        // Get the label
+        if (this.dataCollection.labels) label = this.dataCollection.labels[idx];
+
+        // Get the datapoint
+        if (this.dataCollection.datasets !== undefined) {
+          // since you will only be checking on one dataset you can just go to dataset 0. The first and only one
+          if (this.dataCollection.datasets[0].data !== undefined)
+            dataPoint = this.dataCollection.datasets[0].data[idx];
+        }
+      }
+      console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
+    },
+
+    fillData() {
+      let data: ChartData = {
+        labels: [1, 2, 3],
+        datasets: [
+          {
+            label: "Data One",
+            data: [
+              this.getRandomInt(),
+              this.getRandomInt(),
+              this.getRandomInt(),
+            ],
+            fill: false,
+            borderColor: "red",
+          },
+        ],
+      };
+      console.log("Chart Data below. ")
+      console.log(data);
+
+      this.dataCollection = data;
+    },
+    getRandomInt() {
+      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
     },
     playVid() {
       this.$refs["videoPlayer"].play();
@@ -140,6 +218,9 @@ export default Vue.extend({
     pauseVid() {
       this.$refs["videoPlayer"].pause();
     },
+  },
+  components: {
+    BarChart,
   },
 });
 </script>

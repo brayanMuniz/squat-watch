@@ -19,7 +19,7 @@
       <button @click="playVid" type="button">Play Vid</button>
       <button @click="pauseVid" type="button">Pause Vid</button>
     </div>
-    {{ fireStoreWorkouts }}
+    <!-- {{ fireStoreWorkouts }} -->
 
     <div>Stats</div>
   </div>
@@ -29,12 +29,15 @@
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
-import { Workout } from "@/interfaces/workout.interface";
+import {
+  ExerciseChartData,
+  WorkingSet,
+  Workout,
+} from "@/interfaces/workout.interface";
 import { ChartData, ChartPoint } from "chart.js";
-// Since chartjs 3.0 came out i kept getting errors but this person fixed it for me lol thx
-// https://github.com/apertureless/vue-chartjs/issues/695#issuecomment-813059967
-import BarChart from "@/components/LineChart";
 import { Moment } from "moment";
+import store from "@/store";
+import BarChart from "@/components/LineChart";
 
 export default Vue.extend({
   name: "Home",
@@ -43,7 +46,7 @@ export default Vue.extend({
       videoReady: false,
       videoUrl: "",
       fireStoreWorkouts: new Array<Workout>(),
-      dataCollection: Object as ChartData,
+      dataCollection: Object() as ChartData,
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
@@ -51,29 +54,17 @@ export default Vue.extend({
     };
   },
   async created() {
-    this.fillData();
-    firebaseApp.auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        // await this.retriveWorkoutData("05/10/2021", "05/14/2021");
-      }
-    });
-
-    // this is the actual name of the video NOT the url link
-    // const testVideo = "redditsave.com_numa_numa-t8vuqusl0fm61.mp4";
-    // let testVideRef = firebaseApp.storage().ref(testVideo);
-    // await testVideRef
-    //   .getDownloadURL()
-    //   .then((url) => {
-    //     this.videoUrl = url;
-    //     this.videoReady = true;
-    //   })
-    //   .catch((err) => {
-    //     this.videoUrl = "";
-    //     this.videoReady = false;
-    //     console.error(err);
-    //   });
+    await this.retriveWorkoutData("05/10/2021", "05/14/2021")
+      .then((res) => {
+        let convertedData = this.covertWorkoutDataToChartData(res);
+        this.dataCollection = convertedData[0].chartData;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   methods: {
+    // Firebase Methods ==========================
     async signOut() {
       await firebaseApp
         .auth()
@@ -100,12 +91,13 @@ export default Vue.extend({
         let calculatedDay = moment(startDate).add(i, "days");
         dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
       }
-      console.log(dates);
       return dates;
     },
 
     async retriveWorkoutData(startDate?: string, endDate?: string) {
       let dates: Array<string> = [];
+      let workoutData: Array<Workout> = [];
+      let error = false;
 
       // if startDate not provided, gets data from one week ago to now
       if (startDate && endDate) {
@@ -117,8 +109,8 @@ export default Vue.extend({
         );
       }
 
-      const myUID: string | undefined = firebaseApp.auth().currentUser?.uid;
-      if (myUID != undefined) {
+      const myUID: string | undefined = store.getters.getMyUID;
+      if (myUID !== undefined) {
         let workoutPath = firebaseApp
           .firestore()
           .collection("users")
@@ -137,30 +129,106 @@ export default Vue.extend({
           },
           fromFireStore: function (doc: any) {
             const data = doc.data();
-            console.log(data);
             return new Workout(data.name, doc.id, data.exercises, data.length);
           },
         };
 
-        dates.forEach(async (date) => {
+        // using for ... in instead of forEach becasue for of will use await properly
+        for (const date in dates) {
           await workoutPath
-            .doc(date)
+            .doc(dates[date])
             .get()
             .then((doc) => {
               if (doc.exists) {
                 this.fireStoreWorkouts.push(
                   workoutConverter.fromFireStore(doc)
                 );
+                workoutData.push(workoutConverter.fromFireStore(doc));
               }
             })
             .catch((err) => {
               console.error(err);
             });
-        });
+        }
+
+        if (error) {
+          return Promise.reject("Error");
+        } else {
+          return Promise.resolve(workoutData);
+        }
+      } else {
+        return Promise.reject("Not signed in ");
       }
     },
-    // ! IF YOU HAVE MULTIPLE DATA SETS YOU ARE NOT ABLE TO TELL WHICH DATA POINT YOU PICKED, SO I WILL STICK TO ONE DATA POINT
+    // Converts every exercise into one set of ChartData obj.
+    covertWorkoutDataToChartData(
+      workoutData: Array<Workout>
+    ): Array<ExerciseChartData> {
+      let alreadyStartedExercises: Array<string> = [];
+      let allExercises: Array<ExerciseChartData> = [];
+
+      // ? Move these to workoutinterface
+      function calculateOneRepMax(weight: number, reps: number): number {
+        return Math.round(weight * (1 + reps / 30));
+      }
+
+      function findBestOneRepMax(sets: Array<WorkingSet>): number {
+        let bestOneRepMax = 0;
+        sets.forEach((set) => {
+          let setOneRepMax = calculateOneRepMax(set.weight, set.reps);
+          if (setOneRepMax > bestOneRepMax) {
+            bestOneRepMax = setOneRepMax;
+          }
+        });
+        return bestOneRepMax;
+      }
+
+      workoutData.forEach((workout) => {
+        workout.exercises.forEach((exercise) => {
+          if (alreadyStartedExercises.includes(exercise.exerciseName)) {
+            allExercises.forEach((exerciseChartData) => {
+              if (exerciseChartData.exerciseName === exercise.exerciseName) {
+                // x axis of dates
+                if (exerciseChartData.chartData.labels)
+                  exerciseChartData.chartData.labels.push(workout.date);
+
+                // y axis of one rep max
+                if (exerciseChartData.chartData.datasets) {
+                  if (exerciseChartData.chartData.datasets[0].data)
+                    exerciseChartData.chartData.datasets[0].data.push(
+                      findBestOneRepMax(exercise.sets)
+                    );
+                }
+              }
+            });
+          } else {
+            let convertedData: ChartData = {
+              labels: [workout.date], // x axis
+              datasets: [
+                {
+                  label: `${exercise.exerciseName} One Rep Max`,
+                  data: [findBestOneRepMax(exercise.sets)], // y axis
+                  fill: false,
+                  borderColor: "red",
+                },
+              ],
+            };
+            alreadyStartedExercises.push(exercise.exerciseName);
+
+            allExercises.push({
+              exerciseName: exercise.exerciseName,
+              chartData: convertedData,
+            });
+          }
+        });
+      });
+
+      return allExercises;
+    },
+
+    // Chart Methods ==========================
     pointClicked(data: any) {
+      // ! IF YOU HAVE MULTIPLE DATA SETS YOU ARE NOT ABLE TO TELL WHICH DATA POINT YOU PICKED, SO I WILL STICK TO ONE DATA POINT
       let idx: number | undefined = data._index;
       let label:
         | string
@@ -204,14 +272,12 @@ export default Vue.extend({
           },
         ],
       };
-      console.log("Chart Data below. ")
-      console.log(data);
-
       this.dataCollection = data;
     },
     getRandomInt() {
       return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
     },
+    // Video Player Methods ==========================
     playVid() {
       this.$refs["videoPlayer"].play();
     },

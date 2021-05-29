@@ -1,3 +1,5 @@
+import { ChartData } from "chart.js";
+
 export class Workout {
   name: string;
   date: string;
@@ -17,8 +19,12 @@ export class Workout {
     if (length) this.length = length;
     else this.length = 0;
   }
+}
 
-
+// This will be used to populate data for a single chart
+export interface ExerciseChartData {
+  exerciseName: string;
+  chartData: ChartData;
 }
 
 export interface Workout {

@@ -2,7 +2,7 @@
   <div class="home">
     <button @click="signOut">Sign Out</button>
 
-    <div>
+    <div v-if="dataReady">
       <!-- :options prop needs to be passed in or there will be an error -->
       <BarChart
         :chartData="dataCollection"
@@ -19,7 +19,6 @@
       <button @click="playVid" type="button">Play Vid</button>
       <button @click="pauseVid" type="button">Pause Vid</button>
     </div>
-    <!-- {{ fireStoreWorkouts }} -->
 
     <div>Stats</div>
   </div>
@@ -30,6 +29,7 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import {
+  ChartWorkingSet,
   ExerciseChartData,
   WorkingSet,
   Workout,
@@ -45,8 +45,11 @@ export default Vue.extend({
     return {
       videoReady: false,
       videoUrl: "",
-      fireStoreWorkouts: new Array<Workout>(),
+      dataReady: false,
       dataCollection: Object() as ChartData,
+      allExerciseChartData: Array<ExerciseChartData>(),
+      // Todo: the user will be able to select what exercise they wish to view
+      currentlySelectedExercise: "Squat",
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
@@ -58,8 +61,11 @@ export default Vue.extend({
       .then((res) => {
         let convertedData = this.covertWorkoutDataToChartData(res);
         this.dataCollection = convertedData[0].chartData;
+        this.allExerciseChartData = convertedData;
+        this.dataReady = true;
       })
       .catch((err) => {
+        this.dataReady = false;
         console.error(err);
       });
   },
@@ -140,9 +146,6 @@ export default Vue.extend({
             .get()
             .then((doc) => {
               if (doc.exists) {
-                this.fireStoreWorkouts.push(
-                  workoutConverter.fromFireStore(doc)
-                );
                 workoutData.push(workoutConverter.fromFireStore(doc));
               }
             })
@@ -164,6 +167,7 @@ export default Vue.extend({
     covertWorkoutDataToChartData(
       workoutData: Array<Workout>
     ): Array<ExerciseChartData> {
+      // helps keep track what exercises i already have an object for
       let alreadyStartedExercises: Array<string> = [];
       let allExercises: Array<ExerciseChartData> = [];
 
@@ -188,6 +192,7 @@ export default Vue.extend({
           if (alreadyStartedExercises.includes(exercise.exerciseName)) {
             allExercises.forEach((exerciseChartData) => {
               if (exerciseChartData.exerciseName === exercise.exerciseName) {
+                // Configure Chart Data ==
                 // x axis of dates
                 if (exerciseChartData.chartData.labels)
                   exerciseChartData.chartData.labels.push(workout.date);
@@ -199,10 +204,20 @@ export default Vue.extend({
                       findBestOneRepMax(exercise.sets)
                     );
                 }
+
+                // Cofigures set data ==
+
+                let formattedSets: ChartWorkingSet = {
+                  date: workout.date,
+                  sets: exercise.sets,
+                };
+                exerciseChartData.setsWithDates.push(formattedSets);
               }
             });
           } else {
-            let convertedData: ChartData = {
+            alreadyStartedExercises.push(exercise.exerciseName);
+
+            let convertedDataToChart: ChartData = {
               labels: [workout.date], // x axis
               datasets: [
                 {
@@ -213,11 +228,16 @@ export default Vue.extend({
                 },
               ],
             };
-            alreadyStartedExercises.push(exercise.exerciseName);
+
+            let formattedSets: ChartWorkingSet = {
+              date: workout.date,
+              sets: exercise.sets,
+            };
 
             allExercises.push({
               exerciseName: exercise.exerciseName,
-              chartData: convertedData,
+              chartData: convertedDataToChart,
+              setsWithDates: [formattedSets],
             });
           }
         });
@@ -228,7 +248,7 @@ export default Vue.extend({
 
     // Chart Methods ==========================
     pointClicked(data: any) {
-      // ! IF YOU HAVE MULTIPLE DATA SETS YOU ARE NOT ABLE TO TELL WHICH DATA POINT YOU PICKED, SO I WILL STICK TO ONE DATA POINT
+      // Figure out what point is clicked
       let idx: number | undefined = data._index;
       let label:
         | string
@@ -238,7 +258,7 @@ export default Vue.extend({
         | Date
         | number[]
         | Date[]
-        | Moment[] = 0;
+        | Moment[] = -1;
 
       let dataPoint: number | number[] | ChartPoint | null | undefined = 0;
 
@@ -252,6 +272,23 @@ export default Vue.extend({
           if (this.dataCollection.datasets[0].data !== undefined)
             dataPoint = this.dataCollection.datasets[0].data[idx];
         }
+      }
+
+      // Get video Url if it exist
+      let videoUrl: string | undefined = undefined;
+      this.allExerciseChartData.forEach((exercise) => {
+        if (exercise.exerciseName === this.currentlySelectedExercise) {
+          exercise.setsWithDates.forEach((sets) => {
+            if (sets.date === label) {
+              sets.sets.forEach((set) => {
+                if (set.videoUrl) videoUrl = set.videoUrl;
+              });
+            }
+          });
+        }
+      });
+      if (videoUrl !== undefined) {
+        console.log(videoUrl);
       }
       console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
     },

@@ -25,6 +25,13 @@ export class Workout {
 export interface ExerciseChartData {
   exerciseName: string;
   chartData: ChartData;
+  setsWithDates: Array<ChartWorkingSet>;
+}
+
+// Will have date
+export interface ChartWorkingSet {
+  date: string;
+  sets: Array<WorkingSet>;
 }
 
 export interface Workout {
@@ -42,4 +49,5 @@ export interface Exercise {
 export interface WorkingSet {
   weight: number;
   reps: number;
+  videoUrl?: string;
 }

@@ -39,6 +39,7 @@
 </template>
 
 <script lang="ts">
+// TODO: ask the user about their initial lifts or enter 45 as default for sq, be, de
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 
@@ -60,11 +61,41 @@ export default Vue.extend({
           .createUserWithEmailAndPassword(this.email, this.password)
           .then(async (res) => {
             console.log(res.user?.uid);
+
+            // add user to firestore
+            if (res.user?.uid !== undefined) {
+              await this.addUserToFireStore(res.user?.uid)
+                .then(() => {
+                  console.log("User was added to firestore");
+                })
+                .catch((err) => {
+                  console.error(err);
+                });
+            }
           })
+
           .catch((err) => {
             console.error(err.code, err.message);
           });
       }
+    },
+    async addUserToFireStore(userUID: string) {
+      // Formats todays date
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, "0");
+      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+      var yyyy = today.getFullYear();
+      let todaysDate = mm + "/" + dd + "/" + yyyy;
+
+      let initalUserData = {
+        dateJoined: todaysDate,
+      };
+
+      return firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(userUID)
+        .set(initalUserData);
     },
   },
 });

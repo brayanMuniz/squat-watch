@@ -17,8 +17,6 @@ export class Workout {
     if (length) this.length = length;
     else this.length = 0;
   }
-
-
 }
 
 export interface Workout {
@@ -31,6 +29,12 @@ export interface Workout {
 export interface Exercise {
   exerciseName: string;
   sets: Array<WorkingSet>;
+  videoData?: Array<VideoData>;
+}
+
+export interface VideoData {
+  setVideoIdx: number;
+  video: any;
 }
 
 export interface WorkingSet {

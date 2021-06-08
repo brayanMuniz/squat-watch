@@ -27,7 +27,6 @@
       <!-- TODO: add a length of workout type to show how long workout was  -->
       <!--         Figure out what time type is valid on all browsers-->
 
-      <!-- In order for the component to behvae indepentinly you would just add it incrementally (amountOfExercises in this case) -->
       <div v-for="exercise in amountOfExercises" :key="exercise">
         <ExerciseComponent
           v-on:emitExerciseData="watchForData($event)"
@@ -36,7 +35,6 @@
         <br />
       </div>
 
-      <!-- Needs to be type="button", otherwise it would submit the form -->
       <button type="button" @click="addExercise">Add Exercise</button>
       <br />
 
@@ -47,13 +45,10 @@
 </template>
 
 <script lang="ts">
-// Todo: only be able to upload one video per exercise
-// Todo: Make video url on sets optional
-// Todo: upload videos with workouts
 import Vue from "vue";
 import ExerciseComponent from "@/components/Exercise.vue";
 import { firebaseApp } from "@/firebase";
-import { Exercise, Workout } from "@/interfaces/workout.interface";
+import { Exercise, VideoData, Workout } from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
 export default Vue.extend({
@@ -63,7 +58,6 @@ export default Vue.extend({
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
       amountOfExercises: 1,
       exercises: Array<Exercise>(),
-      setVideos: [],
     };
   },
   async mounted() {
@@ -94,6 +88,7 @@ export default Vue.extend({
 
         // With a batch multiple writes to the database are able to be committed at once, and none are commited if any fail
         let batch = firebaseApp.firestore().batch();
+
         // Create workout object
         let workout: Workout = {
           name: this.workoutName,
@@ -109,28 +104,47 @@ export default Vue.extend({
           .collection("workouts")
           .doc(formattedDate);
 
-        // If any videos have to be uploaded, upload them, get their videoUrl and add to workout object
-        if (this.setVideos.length > 0) {
-          // location of where you will place the video in firebase.storage()
-          // let fileNamePlaceHolder = formattedDate; // ? this woudl ahve to be the formattedDate.exerciseName.set or something likle that because if i have multiple it wourldnt work
-          // const imageUserRef = firebaseApp
-          //   .storage()
-          //   .ref(`users/${myUid}/${fileNamePlaceHolder}`);
-          // await imageUserRef.put(this.videoUpload);
-          // await imageUserRef
-          //   .getDownloadURL()
-          //   .then((downloadUrl) => {
-          //     workout.exercises[0].sets[0].videoUrl = downloadUrl;
-          //   })
-          //   .catch((err) => {
-          //     console.error(err);
-          //     // Todo: be able to remove video
-          //     alert(
-          //       "We were not able to upload your set, try removing your video"
-          //     );
-          //   });
+        for (const exercise in this.exercises) {
+          if (this.exercises[exercise].videoData) {
+            // Upload videos and get thier video url
+            for (const setWithVideo in this.exercises[exercise].videoData) {
+              let setVideoData: VideoData = this.exercises[exercise].videoData[
+                setWithVideo
+              ];
+
+              // location in firebase storage as users/uid/workouts/exercises/exerciseName/MM-DD-YYYY
+              let location = `users/${myUid}/workouts/exercises/${this.exercises[exercise].exerciseName}/${formattedDate}`;
+              const videoRef = firebaseApp.storage().ref(location);
+              await videoRef.put(setVideoData.video);
+
+              // get their videoUrl and add to workout.set object
+              await videoRef
+                .getDownloadURL()
+                .then((downloadUrl) => {
+                  this.exercises[exercise].sets[
+                    setVideoData.setVideoIdx
+                  ].videoUrl = downloadUrl;
+                })
+                .catch((err) => {
+                  console.error(err);
+                  // Todo: be able to remove video
+                  alert("We were not able to upload your video.");
+                });
+            }
+          }
+
+          // If there are not videos for this set, delete em
+          for (const set in this.exercises[exercise].sets) {
+            if (this.exercises[exercise].sets[set].videoUrl === "") {
+              delete this.exercises[exercise].sets[set].videoUrl;
+            }
+          }
+          // Can not provide custom video object to firestore
+          delete this.exercises[exercise].videoData;
         }
-        batch.set(userFirestoreWorkoutPath, workout); // at this point every set should have their video url
+
+        batch.set(userFirestoreWorkoutPath, workout);
+        // Todo: give user a download bar
         batch
           .commit()
           .then(() => {
@@ -141,7 +155,6 @@ export default Vue.extend({
           });
       }
     },
-
     // Component Data Sync ===================================
     addExercise() {
       // A new component will be rendered off of this and data will sync up automotically

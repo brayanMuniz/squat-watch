@@ -2,7 +2,7 @@
   <div class="form-group">
     <!-- TODO: Have pre selected exercises that pop up(Squat, Bench, Deadlift) -->
     <button @click="removeExercise" type="button">
-      Remove Exercise
+      -R Exercise
     </button>
     <br />
     <label for="Exercise1">Exercise Name: </label>
@@ -12,24 +12,25 @@
       class="form-control"
     />
     <br />
-    <!-- SET ============== -->
+    <!-- SETS ============== -->
     <div v-for="(set, index) in exerciseData.sets" :key="index">
-      <button @click="removeSet(index)" type="button">Remove Set</button>
+      <button @click="removeSet(index)" type="button">-R</button>
       <label for="Exercise1">Weight </label>
       <input v-model="set.weight" type="number" class="form-control" />
       <label for="Exercise1">Reps </label>
       <input v-model="set.reps" type="number" class="form-control" />
-      <!-- <label for="Starting Amount">Video For Set:</label>
+
       <br />
 
       <input
-        ref="upload"
+        ref="myFiles"
         name="file-upload"
-        @change="previewFiles"
+        @change="previewFiles($event, index)"
         type="file"
         class="form-control"
         id="Profile Image"
-      /> -->
+        multiple
+      />
     </div>
     <button @click="addNewSet" type="button">Add New Set</button>
   </div>
@@ -37,39 +38,70 @@
 
 <script lang="ts">
 import Vue from "vue";
-// Todo: video upload
 
 export default Vue.extend({
   name: "Exercise",
   data() {
     return {
       videoUpload: new Blob(),
+      videoReady: false,
+      // Todo: make user fill out at least exerciseName and one set 
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
+        videoData: Array<any>(), // Todo: update this
       },
     };
   },
   methods: {
-    previewFiles(event: any): void {
-      this.videoUpload = event.target.files[0];
-      console.log(this.videoUpload);
+    previewFiles(event: any, setIdx: number): void {
+      if (this.exerciseData.sets[setIdx] !== undefined) {
+        let video = event.target.files[0];
+        // If you are replacing the video for the set
+        let foundVideo = false;
+        this.exerciseData.videoData.forEach((vidData) => {
+          if (vidData.setVideoIdx === setIdx) {
+            vidData.video = video;
+            foundVideo = true;
+          }
+        });
+        // else place new video data object
+        if (!foundVideo)
+          this.exerciseData.videoData.push({
+            setVideoIdx: setIdx,
+            video: video,
+          });
+      }
     },
     addNewSet() {
-      let setsLength: number = this.exerciseData.sets.length;
-      if (setsLength > 0) {
-        let lastSetData = this.exerciseData.sets[setsLength - 1];
-        this.exerciseData.sets.push(lastSetData);
-      } else {
-        this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
-      }
+      this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
+      // ! Cant use this because if you change one data set it will change the other
+      // let setsLength: number = this.exerciseData.sets.length;
+      // if (setsLength > 0) {
+      //   let lastSetData = this.exerciseData.sets[setsLength - 1];
+      //   this.exerciseData.sets.push(lastSetData);
+      // } else {
+      //   this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
+      // }
     },
     removeExercise() {
       this.$emit("removeExercise", this.exerciseData);
     },
     removeSet(setIdx: number) {
+      // Remove set
       if (this.exerciseData.sets[setIdx]) {
         this.exerciseData.sets.splice(setIdx, 1);
+      }
+      // remove video data from this.exerciseData
+      let videoDataSetIdx = -1;
+      this.exerciseData.videoData.forEach((vidData) => {
+        if (vidData.setVideoIdx == setIdx) {
+          videoDataSetIdx = setIdx;
+        }
+      });
+
+      if (videoDataSetIdx !== -1) {
+        this.exerciseData.videoData.splice(setIdx, 1);
       }
     },
   },

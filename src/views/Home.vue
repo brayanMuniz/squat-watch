@@ -4,20 +4,19 @@
 
     <div v-if="dataReady">
       <!-- :options prop needs to be passed in or there will be an error -->
-      <BarChart
+      <LineChart
         :chartData="dataCollection"
         :options="chartOptions"
         v-on:clickedPoint="pointClicked($event)"
       />
     </div>
 
-    <div>Chart</div>
     <div v-if="videoReady">
-      <video ref="videoPlayer">
+      <video ref="videoPlayer" width="320" height="240">
         <source :src="videoUrl" />
       </video>
-      <button @click="playVid" type="button">Play Vid</button>
-      <button @click="pauseVid" type="button">Pause Vid</button>
+      <button @click="playVid" type="button">Play</button>
+      <button @click="pauseVid" type="button">Pause</button>
     </div>
 
     <div>Stats</div>
@@ -37,7 +36,7 @@ import {
 import { ChartData, ChartPoint } from "chart.js";
 import { Moment } from "moment";
 import store from "@/store";
-import BarChart from "@/components/LineChart";
+import LineChart from "@/components/LineChart";
 
 export default Vue.extend({
   name: "Home",
@@ -48,7 +47,7 @@ export default Vue.extend({
       dataReady: false,
       dataCollection: Object() as ChartData,
       allExerciseChartData: Array<ExerciseChartData>(),
-      // Todo: the user will be able to select what exercise they wish to view
+      // Todo: let the user will be able to select what exercise they wish to view
       currentlySelectedExercise: "Squat",
       chartOptions: {
         responsive: true,
@@ -57,7 +56,7 @@ export default Vue.extend({
     };
   },
   async created() {
-    await this.retriveWorkoutData("05/10/2021", "05/14/2021")
+    await this.retriveWorkoutData("05/14/2021", "06/04/2021")
       .then((res) => {
         let convertedData = this.covertWorkoutDataToChartData(res);
         this.dataCollection = convertedData[0].chartData;
@@ -110,7 +109,9 @@ export default Vue.extend({
         dates = this.generateArrayOfDates(startDate, endDate);
       } else {
         dates = this.generateArrayOfDates(
-          moment().subtract(1, "week").format("MM-DD-YYYY"),
+          moment()
+            .subtract(1, "week")
+            .format("MM-DD-YYYY"),
           moment().format("MM-DD-YYYY")
         );
       }
@@ -125,7 +126,7 @@ export default Vue.extend({
 
         // ? Do i place custom workout object in workout interface or make a new file for it ?
         let workoutConverter = {
-          toFirestore: function (workout: Workout) {
+          toFirestore: function(workout: Workout) {
             return {
               name: workout.name,
               date: workout.date,
@@ -133,7 +134,7 @@ export default Vue.extend({
               length: workout.length,
             };
           },
-          fromFireStore: function (doc: any) {
+          fromFireStore: function(doc: any) {
             const data = doc.data();
             return new Workout(data.name, doc.id, data.exercises, data.length);
           },
@@ -281,38 +282,23 @@ export default Vue.extend({
           exercise.setsWithDates.forEach((sets) => {
             if (sets.date === label) {
               sets.sets.forEach((set) => {
-                if (set.videoUrl) videoUrl = set.videoUrl;
+                if (set.videoUrl !== "" || set.videoUrl !== undefined)
+                  videoUrl = set.videoUrl;
               });
             }
           });
         }
       });
-      if (videoUrl !== undefined) {
-        console.log(videoUrl);
-      }
-      console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
-    },
 
-    fillData() {
-      let data: ChartData = {
-        labels: [1, 2, 3],
-        datasets: [
-          {
-            label: "Data One",
-            data: [
-              this.getRandomInt(),
-              this.getRandomInt(),
-              this.getRandomInt(),
-            ],
-            fill: false,
-            borderColor: "red",
-          },
-        ],
-      };
-      this.dataCollection = data;
-    },
-    getRandomInt() {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
+      console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
+
+      if (videoUrl !== undefined) {
+        this.videoUrl = videoUrl;
+        this.videoReady = true;
+        console.log(`Video URL for video is ${videoUrl}`);
+      } else {
+        this.videoReady = false;
+      }
     },
     // Video Player Methods ==========================
     playVid() {
@@ -323,7 +309,7 @@ export default Vue.extend({
     },
   },
   components: {
-    BarChart,
+    LineChart,
   },
 });
 </script>

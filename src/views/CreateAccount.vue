@@ -21,9 +21,40 @@
       />
     </div>
 
+    <!-- Lifts  -->
+    <div class="form-group">
+      <label for="Password">Squat </label>
+      <input
+        v-model.trim="initialLifts.Squat"
+        type="number"
+        class="form-control"
+        id="Password"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="Password">Bench</label>
+      <input
+        v-model.trim="initialLifts.Bench"
+        type="number"
+        class="form-control"
+        id="Password"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="Password">Deadlift</label>
+      <input
+        v-model.trim="initialLifts.Deadlift"
+        type="number"
+        class="form-control"
+        id="Password"
+      />
+    </div>
+
     <!-- Upload a profile image -->
-    <!-- <div class="form-group">
-      <label for="Starting Amount">Select A File for Profile Image:</label>
+    <div class="form-group">
+      <label for="Starting Amount">Profile Image:</label>
       <input
         ref="upload"
         name="file-upload"
@@ -32,22 +63,30 @@
         class="form-control"
         id="Profile Image"
       />
-    </div> -->
+    </div>
 
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </template>
 
 <script lang="ts">
-// TODO: ask the user about their initial lifts or enter 45 as default for sq, be, de
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
+import moment from "moment";
 
 export default Vue.extend({
   data() {
     return {
       email: "",
       password: "",
+      profileImageUrl: "",
+      initialLifts: {
+        Squat: 0,
+        Bench: 0,
+        Deadlift: 0,
+      },
+      profileImage: new Blob(),
+      userWantsProfileImage: false,
     };
   },
   methods: {
@@ -60,10 +99,26 @@ export default Vue.extend({
           .auth()
           .createUserWithEmailAndPassword(this.email, this.password)
           .then(async (res) => {
-            console.log(res.user?.uid);
-
             // add user to firestore
             if (res.user?.uid !== undefined) {
+              // Upload profile image to firebase storage
+              if (this.userWantsProfileImage) {
+                let profileImageUpload = await firebaseApp
+                  .storage()
+                  .ref(`users/${res.user?.uid}/profileImage`);
+                await profileImageUpload.put(this.profileImage);
+                await profileImageUpload
+                  .getDownloadURL()
+                  .then((downloadUrl) => {
+                    this.profileImageUrl = downloadUrl;
+                  })
+
+                  .catch((err) => {
+                    console.error(err);
+                    alert("We were not able to upload your profile picture .");
+                  });
+              }
+
               await this.addUserToFireStore(res.user?.uid)
                 .then(() => {
                   console.log("User was added to firestore");
@@ -80,22 +135,26 @@ export default Vue.extend({
       }
     },
     async addUserToFireStore(userUID: string) {
-      // Formats todays date
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, "0");
-      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
-      var yyyy = today.getFullYear();
-      let todaysDate = mm + "/" + dd + "/" + yyyy;
-
-      let initalUserData = {
-        dateJoined: todaysDate,
+      let initalUserData: any = {
+        dateJoined: moment().format("MM-DD-YYYY"),
+        initialLifts: this.initialLifts,
       };
+      if (this.profileImageUrl !== "" || this.profileImageUrl !== undefined)
+        initalUserData["profileImageUrl"] = this.profileImageUrl;
 
       return firebaseApp
         .firestore()
         .collection("users")
         .doc(userUID)
         .set(initalUserData);
+    },
+    previewFiles(event: any): void {
+      if (event.target.files[0]) {
+        this.profileImage = event.target.files[0];
+        this.userWantsProfileImage = true;
+      } else {
+        this.userWantsProfileImage = false;
+      }
     },
   },
 });

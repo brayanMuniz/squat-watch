@@ -2,6 +2,15 @@
   <div class="home">
     <button @click="signOut">Sign Out</button>
 
+    <!-- TODO: make this a button that collapses with 
+isAutoCloseable	prop 
+ -->
+    <FunctionalCalendar
+      v-model="calendarData"
+      :configs="calendarConfigs"
+      v-on:choseDay="getDateRange($event)"
+    ></FunctionalCalendar>
+
     <div v-if="dataReady">
       <!-- :options prop needs to be passed in or there will be an error -->
       <LineChart
@@ -10,6 +19,8 @@
         v-on:clickedPoint="pointClicked($event)"
       />
     </div>
+
+    <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
 
     <div v-if="videoReady">
       <video ref="videoPlayer" width="320" height="240">
@@ -37,6 +48,7 @@ import { ChartData, ChartPoint } from "chart.js";
 import { Moment } from "moment";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
+import { FunctionalCalendar } from "vue-functional-calendar";
 
 export default Vue.extend({
   name: "Home",
@@ -53,15 +65,36 @@ export default Vue.extend({
         responsive: true,
         maintainAspectRatio: false,
       },
+      noDataInThisDateRange: false,
+      startDate: moment()
+        .subtract(1, "week")
+        .format("MM-DD-YYYY"),
+      endDate: moment().format("MM-DD-YYYY"),
+      calendarData: {},
+      calendarConfigs: {
+        sundayStart: true,
+        dateFormat: "mm/dd/yyyy",
+        isDatePicker: false,
+        isDateRange: true,
+        disabledDates: ["afterToday"],
+        isDark: true,
+      },
+      pickedDates: Array<string>(),
     };
   },
   async created() {
-    await this.retriveWorkoutData("05/14/2021", "06/04/2021")
+    await this.retriveWorkoutData(this.startDate, this.endDate)
       .then((res) => {
-        let convertedData = this.covertWorkoutDataToChartData(res);
-        this.dataCollection = convertedData[0].chartData;
-        this.allExerciseChartData = convertedData;
-        this.dataReady = true;
+        let convertedData:
+          | Array<ExerciseChartData>
+          | undefined = this.covertWorkoutDataToChartData(res);
+        if (convertedData.length > 0) {
+          this.dataCollection = convertedData[0].chartData;
+          this.allExerciseChartData = convertedData;
+          this.dataReady = true;
+        } else {
+          this.noDataInThisDateRange = true;
+        }
       })
       .catch((err) => {
         this.dataReady = false;
@@ -69,6 +102,56 @@ export default Vue.extend({
       });
   },
   methods: {
+    async getDateRange(event: any) {
+      console.log(event);
+      if (event.date) {
+        this.pickedDates.push(event.date);
+
+        // remove the last two pairs in the date range
+        if (this.pickedDates.length > 2) {
+          this.pickedDates.shift();
+          this.pickedDates.shift();
+        }
+
+        // there are two dates in the date range
+        if (this.pickedDates.length > 1) {
+          let dateA = moment(this.pickedDates[0]);
+          let dateB = moment(this.pickedDates[1]);
+          let diff: number = dateA.diff(dateB, "days");
+          // if diff is posotive, dateA is more recent
+          if (diff > 0) {
+            this.endDate = dateA.format("MM-DD-YYYY");
+            this.startDate = dateB.format("MM-DD-YYYY");
+          } else {
+            this.startDate = dateA.format("MM-DD-YYYY");
+            this.endDate = dateB.format("MM-DD-YYYY");
+          }
+
+          console.log(this.startDate, this.endDate);
+
+          await this.retriveWorkoutData(this.startDate, this.endDate)
+            .then((res) => {
+              let convertedData:
+                | Array<ExerciseChartData>
+                | undefined = this.covertWorkoutDataToChartData(res);
+              if (convertedData.length > 0) {
+                this.dataCollection = convertedData[0].chartData;
+                this.allExerciseChartData = convertedData;
+                this.dataReady = true;
+              } else {
+                console.log("No Data in this date range ");
+                this.dataReady = false;
+                this.noDataInThisDateRange = true;
+              }
+            })
+            .catch((err) => {
+              this.dataReady = false;
+              console.error(err);
+            });
+        }
+      }
+    },
+
     // Firebase Methods ==========================
     async signOut() {
       await firebaseApp
@@ -310,6 +393,7 @@ export default Vue.extend({
   },
   components: {
     LineChart,
+    FunctionalCalendar,
   },
 });
 </script>

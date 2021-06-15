@@ -1,8 +1,5 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/upload">Upload Video</router-link>
-    </div>
     <router-view />
   </div>
 </template>
@@ -10,12 +7,28 @@
 <script lang="ts">
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
+import store from "./store";
 
 export default Vue.extend({
   name: "App",
   async mounted() {
     firebaseApp.auth().onAuthStateChanged(async (user) => {
       if (user) {
+        // Get userData
+        await firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get()
+          .then((res) => {
+            if (res.exists) {
+              store.commit("updateUserData", res.data());
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+
         // Pushes the user to the home page
         if (this.$router.currentRoute.fullPath !== "/") {
           this.$router.push("/");
@@ -38,5 +51,4 @@ export default Vue.extend({
 });
 </script>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>

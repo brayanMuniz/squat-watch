@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <button @click="signOut">Sign Out</button>
+    <Navbar />
 
     <!-- TODO: make this a button that collapses with 
 isAutoCloseable	prop 
@@ -48,6 +48,7 @@ import { ChartData, ChartPoint } from "chart.js";
 import { Moment } from "moment";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
+import Navbar from "@/components/Navbar.vue";
 import { FunctionalCalendar } from "vue-functional-calendar";
 
 export default Vue.extend({
@@ -83,23 +84,23 @@ export default Vue.extend({
     };
   },
   async created() {
-    await this.retriveWorkoutData(this.startDate, this.endDate)
-      .then((res) => {
-        let convertedData:
-          | Array<ExerciseChartData>
-          | undefined = this.covertWorkoutDataToChartData(res);
-        if (convertedData.length > 0) {
-          this.dataCollection = convertedData[0].chartData;
-          this.allExerciseChartData = convertedData;
-          this.dataReady = true;
-        } else {
-          this.noDataInThisDateRange = true;
-        }
-      })
-      .catch((err) => {
-        this.dataReady = false;
-        console.error(err);
-      });
+    // await this.retriveWorkoutData(this.startDate, this.endDate)
+    //   .then((res) => {
+    //     let convertedData:
+    //       | Array<ExerciseChartData>
+    //       | undefined = this.covertWorkoutDataToChartData(res);
+    //     if (convertedData.length > 0) {
+    //       this.dataCollection = convertedData[0].chartData;
+    //       this.allExerciseChartData = convertedData;
+    //       this.dataReady = true;
+    //     } else {
+    //       this.noDataInThisDateRange = true;
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     this.dataReady = false;
+    //     console.error(err);
+    //   });
   },
   methods: {
     async getDateRange(event: any) {
@@ -152,18 +153,7 @@ export default Vue.extend({
       }
     },
 
-    // Firebase Methods ==========================
-    async signOut() {
-      await firebaseApp
-        .auth()
-        .signOut()
-        .then(() => {
-          console.log("User was signed out");
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    },
+    
 
     generateArrayOfDates(startDate: string, endDate: string): Array<string> {
       let dates: Array<string> = [];
@@ -394,6 +384,7 @@ export default Vue.extend({
   components: {
     LineChart,
     FunctionalCalendar,
+    Navbar,
   },
 });
 </script>

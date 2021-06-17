@@ -3,6 +3,7 @@ import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Upload from "../views/Upload.vue";
 import CreateAccount from "@/views/CreateAccount.vue";
+import UserSignIn from "@/views/UserSignIn.vue";
 
 Vue.use(VueRouter);
 
@@ -21,6 +22,11 @@ const routes: Array<RouteConfig> = [
     path: "/createAccount",
     name: "Create Account",
     component: CreateAccount,
+  },
+  {
+    path: "/signIn",
+    name: "Sign In",
+    component: UserSignIn,
   },
 ];
 

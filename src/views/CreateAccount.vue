@@ -1,28 +1,30 @@
 <template>
-  <form @submit.prevent="makeNewUser">
-    <div class="form-group">
-      <label for="Email">Email address</label>
-      <input
-        type="email"
-        class="form-control"
-        id="Email"
-        aria-describedby="emailHelp"
-        v-model.trim="email"
-      />
-    </div>
+  <div>
+    <button @click="goToSignInRoute" type="button">Sign In</button>
+    <form @submit.prevent="makeNewUser">
+      <div class="form-group">
+        <label for="Email">Email address</label>
+        <input
+          type="email"
+          class="form-control"
+          id="Email"
+          aria-describedby="emailHelp"
+          v-model.trim="email"
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="Password">Password</label>
-      <input
-        v-model.trim="password"
-        type="password"
-        class="form-control"
-        id="Password"
-      />
-    </div>
+      <div class="form-group">
+        <label for="Password">Password</label>
+        <input
+          v-model.trim="password"
+          type="password"
+          class="form-control"
+          id="Password"
+        />
+      </div>
 
-    <!-- Upload a profile image -->
-    <!-- <div class="form-group">
+      <!-- Upload a profile image -->
+      <!-- <div class="form-group">
       <label for="Starting Amount">Select A File for Profile Image:</label>
       <input
         ref="upload"
@@ -34,8 +36,9 @@
       />
     </div> -->
 
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
 </template>
 
 <script lang="ts">
@@ -96,6 +99,9 @@ export default Vue.extend({
         .collection("users")
         .doc(userUID)
         .set(initalUserData);
+    },
+    goToSignInRoute() {
+      this.$router.push("/SignIn");
     },
   },
 });

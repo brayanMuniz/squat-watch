@@ -12,6 +12,8 @@
       class="form-control"
     />
     <br />
+    
+    <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div v-for="(set, index) in exerciseData.sets" :key="index">
       <button @click="removeSet(index)" type="button">-R</button>
@@ -45,7 +47,7 @@ export default Vue.extend({
     return {
       videoUpload: new Blob(),
       videoReady: false,
-      // Todo: make user fill out at least exerciseName and one set 
+      // Todo: make user fill out at least exerciseName and one set
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
@@ -74,15 +76,17 @@ export default Vue.extend({
       }
     },
     addNewSet() {
-      this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
-      // ! Cant use this because if you change one data set it will change the other
-      // let setsLength: number = this.exerciseData.sets.length;
-      // if (setsLength > 0) {
-      //   let lastSetData = this.exerciseData.sets[setsLength - 1];
-      //   this.exerciseData.sets.push(lastSetData);
-      // } else {
-      //   this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
-      // }
+      let setsLength: number = this.exerciseData.sets.length;
+      if (setsLength > 0) {
+        let lastSetData = {
+          weight: this.exerciseData.sets[setsLength - 1].weight,
+          reps: this.exerciseData.sets[setsLength - 1].reps,
+          videoUrl: this.exerciseData.sets[setsLength - 1].videoUrl,
+        };
+        this.exerciseData.sets.push(lastSetData);
+      } else {
+        this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
+      }
     },
     removeExercise() {
       this.$emit("removeExercise", this.exerciseData);

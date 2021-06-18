@@ -96,6 +96,8 @@ export default Vue.extend({
           exercises: this.exercises,
         };
 
+        let addNewExerciseToUserData: Array<string> = [];
+
         // Sets path to document
         const userFirestoreWorkoutPath = firebaseApp
           .firestore()
@@ -105,6 +107,10 @@ export default Vue.extend({
           .doc(formattedDate);
 
         for (const exercise in this.exercises) {
+          let exerciseName: string = this.exercises[exercise].exerciseName;
+          if (!this.userHasExerciseLogged(exerciseName))
+            addNewExerciseToUserData.push(exerciseName);
+
           if (this.exercises[exercise].videoData) {
             // Upload videos and get thier video url
             for (const setWithVideo in this.exercises[exercise].videoData) {
@@ -139,8 +145,23 @@ export default Vue.extend({
               delete this.exercises[exercise].sets[set].videoUrl;
             }
           }
+
           // Can not provide custom video object to firestore
           delete this.exercises[exercise].videoData;
+        }
+
+        if (addNewExerciseToUserData.length > 0) {
+          let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
+            addNewExerciseToUserData
+          );
+          const userDataDoc = firebaseApp
+            .firestore()
+            .collection("users")
+            .doc(myUid);
+
+          batch.update(userDataDoc, {
+            exercises: newExercises,
+          });
         }
 
         batch.set(userFirestoreWorkoutPath, workout);
@@ -183,6 +204,12 @@ export default Vue.extend({
         console.log("Pushing new exercise");
         this.exercises.push(changedData);
       }
+    },
+    userHasExerciseLogged(exerciseName: string): boolean {
+      let isLogged = false;
+      if (this.$store.getters.getUserData.exercises.includes(exerciseName))
+        isLogged = true;
+      return isLogged;
     },
   },
   components: {

@@ -5,13 +5,26 @@
       -R Exercise
     </button>
     <br />
-    <label for="Exercise1">Exercise Name: </label>
-    <input
+    <label for="Exercise">Exercise Name: </label>
+    <!-- https://www.npmjs.com/package/vue-autosuggest -->
+    <vue-autosuggest
+      :suggestions="getExerciseSuggestions"
+      :input-props="{
+        id: 'autosuggest__input',
+        placeholder: 'Exercise Name',
+      }"
+      @selected="selectHandler"
       v-model.trim="exerciseData.exerciseName"
-      type="text"
-      class="form-control"
-    />
+    >
+    <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
+      <template slot-scope="{ suggestion }">
+        <span class="my-suggestion-item">{{ suggestion.item }}</span>
+      </template>
+    </vue-autosuggest>
+
     <br />
+
+    <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div v-for="(set, index) in exerciseData.sets" :key="index">
       <button @click="removeSet(index)" type="button">-R</button>
@@ -38,6 +51,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { VueAutosuggest } from "vue-autosuggest"; // ? Same problem with calendar component. When creating .d.ts file, it says there is no exported member
 
 export default Vue.extend({
   name: "Exercise",
@@ -45,7 +59,7 @@ export default Vue.extend({
     return {
       videoUpload: new Blob(),
       videoReady: false,
-      // Todo: make user fill out at least exerciseName and one set 
+      // Todo: make user fill out at least exerciseName and one set
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
@@ -54,6 +68,9 @@ export default Vue.extend({
     };
   },
   methods: {
+    selectHandler(event: any) {
+      if (event !== null) this.exerciseData.exerciseName = event.item;
+    },
     previewFiles(event: any, setIdx: number): void {
       if (this.exerciseData.sets[setIdx] !== undefined) {
         let video = event.target.files[0];
@@ -74,15 +91,17 @@ export default Vue.extend({
       }
     },
     addNewSet() {
-      this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
-      // ! Cant use this because if you change one data set it will change the other
-      // let setsLength: number = this.exerciseData.sets.length;
-      // if (setsLength > 0) {
-      //   let lastSetData = this.exerciseData.sets[setsLength - 1];
-      //   this.exerciseData.sets.push(lastSetData);
-      // } else {
-      //   this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
-      // }
+      let setsLength: number = this.exerciseData.sets.length;
+      if (setsLength > 0) {
+        let lastSetData = {
+          weight: this.exerciseData.sets[setsLength - 1].weight,
+          reps: this.exerciseData.sets[setsLength - 1].reps,
+          videoUrl: this.exerciseData.sets[setsLength - 1].videoUrl,
+        };
+        this.exerciseData.sets.push(lastSetData);
+      } else {
+        this.exerciseData.sets.push({ weight: 0, reps: 0, videoUrl: "" });
+      }
     },
     removeExercise() {
       this.$emit("removeExercise", this.exerciseData);
@@ -113,6 +132,18 @@ export default Vue.extend({
         this.$emit("emitExerciseData", changedData);
       },
     },
+  },
+  computed: {
+    getExerciseSuggestions() {
+      return [
+        {
+          data: this.$store.getters.getUserData.exercises,
+        },
+      ];
+    },
+  },
+  components: {
+    VueAutosuggest,
   },
 });
 </script>

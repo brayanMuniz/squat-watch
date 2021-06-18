@@ -87,7 +87,7 @@ export default Vue.extend({
       password: "",
       visibility: "Public",
       profileImageUrl: "",
-      initialLiftsData: [{ name: "Squat", weight: 0, reps: 5 }],
+      initialLiftsData: [{ name: "Squat", weight: 0, reps: 5 }], // Todo: make sure every exercise is unique
       profileImage: new Blob(),
       userWantsProfileImage: false,
     };
@@ -140,10 +140,10 @@ export default Vue.extend({
               await this.addUserToFireStore(res.user?.uid)
                 .then(() => {
                   this.addUserNameToFireStore(this.userName, {
-                    belongsTo: res.user?.uid
-                  }).then(res => {
-                    console.log("User Name was added to firestore")
-                  })
+                    belongsTo: res.user?.uid,
+                  }).then((res) => {
+                    console.log("User Name was added to firestore");
+                  });
                   console.log("User was added to firestore");
                 })
                 .catch((err) => {
@@ -158,12 +158,19 @@ export default Vue.extend({
       }
     },
     async addUserToFireStore(userUID: string) {
+      let exercises: Array<string> = [];
+      this.initialLiftsData.forEach((exercise) => {
+        exercises.push(exercise.name);
+      });
+
       let initalUserData: any = {
         dateJoined: moment().format("MM-DD-YYYY"),
         initialLifts: this.initialLiftsData,
         userName: this.userName,
         visibility: this.visibility,
+        exercises: exercises,
       };
+
       if (this.profileImageUrl !== "" || this.profileImageUrl !== undefined)
         initalUserData["profileImageUrl"] = this.profileImageUrl;
 

@@ -11,8 +11,22 @@ let app: any = null;
 firebaseApp.auth().onAuthStateChanged(async (user) => {
   if (user) {
     store.commit("updateMyUID", user.uid);
+    await firebaseApp
+      .firestore()
+      .collection("users")
+      .doc(user.uid)
+      .get()
+      .then((res) => {
+        if (res.exists) {
+          store.commit("updateUserData", res.data());
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   } else {
     store.commit("updateMyUID", "");
+    store.commit("updateUserData", {});
   }
 
   if (!app) {

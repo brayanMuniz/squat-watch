@@ -1,6 +1,8 @@
 <template>
   <nav class="flex">
     <router-link to="/">Squat-Watch</router-link>
+    <br />
+    <router-link to="/upload">Add Workout</router-link>
     <button @click="signOut" v-if="userSignedIn">Sign Out</button>
 
     <div>

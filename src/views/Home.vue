@@ -20,6 +20,25 @@ isAutoCloseable	prop
       />
     </div>
 
+    <div v-for="(workout, workoutIdx) in allWorkouts" :key="workoutIdx">
+      <div>
+        <h3>{{ workout.name }}</h3>
+
+        <!-- TODO: have exerciseName and best set on same line -->
+        <div v-for="(exercise, idx) in workout.exercises" :key="idx">
+          {{ exercise.sets.length }} x
+          <a href="#" @click="viewExercise(exercise.exerciseName)">
+            {{ exercise.exerciseName }}</a
+          >
+          | Best Set :
+          {{ getBestSetAsString(exercise.sets) }}
+        </div>
+        <div>
+          {{ workout.date }}
+        </div>
+      </div>
+    </div>
+
     <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
 
     <div v-if="videoReady">
@@ -59,7 +78,8 @@ export default Vue.extend({
       videoUrl: "",
       dataReady: false,
       dataCollection: Object() as ChartData,
-      allExerciseChartData: Array<ExerciseChartData>(),
+      allWorkouts: Array<Workout>(),
+      allExerciseChartData: Array<ExerciseChartData>(), // this is the workout data that is aggragated into exercise data
       // Todo: let the user will be able to select what exercise they wish to view
       currentlySelectedExercise: "Squat",
       chartOptions: {
@@ -71,6 +91,7 @@ export default Vue.extend({
         .subtract(1, "week")
         .format("MM-DD-YYYY"),
       endDate: moment().format("MM-DD-YYYY"),
+      // Calendar Component
       calendarData: {},
       calendarConfigs: {
         sundayStart: true,
@@ -84,23 +105,26 @@ export default Vue.extend({
     };
   },
   async created() {
-    // await this.retriveWorkoutData(this.startDate, this.endDate)
-    //   .then((res) => {
-    //     let convertedData:
-    //       | Array<ExerciseChartData>
-    //       | undefined = this.covertWorkoutDataToChartData(res);
-    //     if (convertedData.length > 0) {
-    //       this.dataCollection = convertedData[0].chartData;
-    //       this.allExerciseChartData = convertedData;
-    //       this.dataReady = true;
-    //     } else {
-    //       this.noDataInThisDateRange = true;
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     this.dataReady = false;
-    //     console.error(err);
-    //   });
+    await this.retriveWorkoutData(this.startDate, this.endDate)
+      .then((res) => {
+        console.log(res);
+        this.allWorkouts = res;
+        let convertedData:
+          | Array<ExerciseChartData>
+          | undefined = this.covertWorkoutDataToChartData(res);
+        if (convertedData.length > 0) {
+          this.currentlySelectedExercise = convertedData[0].exerciseName;
+          this.dataCollection = convertedData[0].chartData;
+          this.allExerciseChartData = convertedData;
+          this.dataReady = true;
+        } else {
+          this.noDataInThisDateRange = true;
+        }
+      })
+      .catch((err) => {
+        this.dataReady = false;
+        console.error(err);
+      });
   },
   methods: {
     async getDateRange(event: any) {
@@ -136,9 +160,21 @@ export default Vue.extend({
                 | Array<ExerciseChartData>
                 | undefined = this.covertWorkoutDataToChartData(res);
               if (convertedData.length > 0) {
-                this.dataCollection = convertedData[0].chartData;
-                this.allExerciseChartData = convertedData;
-                this.dataReady = true;
+                let selectedExerciseIdx = -1;
+                convertedData.forEach((data, idx) => {
+                  if (data.exerciseName === this.currentlySelectedExercise)
+                    selectedExerciseIdx = idx;
+                });
+
+                if (selectedExerciseIdx !== -1) {
+                  this.dataCollection =
+                    convertedData[selectedExerciseIdx].chartData;
+                  this.allExerciseChartData = convertedData;
+                  console.log(this.allExerciseChartData);
+                  this.dataReady = true;
+                } else {
+                  console.error("FIX ME!");
+                }
               } else {
                 console.log("No Data in this date range ");
                 this.dataReady = false;
@@ -152,9 +188,6 @@ export default Vue.extend({
         }
       }
     },
-
-    
-
     generateArrayOfDates(startDate: string, endDate: string): Array<string> {
       let dates: Array<string> = [];
       let startDateMoment = moment(startDate);
@@ -171,7 +204,6 @@ export default Vue.extend({
       }
       return dates;
     },
-
     async retriveWorkoutData(startDate?: string, endDate?: string) {
       let dates: Array<string> = [];
       let workoutData: Array<Workout> = [];
@@ -237,6 +269,27 @@ export default Vue.extend({
         return Promise.reject("Not signed in ");
       }
     },
+    async viewExercise(exerciseName: string) {
+      this.dataReady = false;
+      this.currentlySelectedExercise = exerciseName;
+
+      let selectedExerciseIdx = -1;
+      console.log(this.allExerciseChartData);
+      this.allExerciseChartData.forEach((data, idx) => {
+        if (data.exerciseName === this.currentlySelectedExercise)
+          selectedExerciseIdx = idx;
+      });
+
+      if (selectedExerciseIdx !== -1) {
+        this.dataCollection = this.allExerciseChartData[
+          selectedExerciseIdx
+        ].chartData;
+        console.log(this.allExerciseChartData);
+        this.dataReady = true;
+      } else {
+        console.error("FIX ME!");
+      }
+    },
     // Converts every exercise into one set of ChartData obj.
     covertWorkoutDataToChartData(
       workoutData: Array<Workout>
@@ -244,22 +297,6 @@ export default Vue.extend({
       // helps keep track what exercises i already have an object for
       let alreadyStartedExercises: Array<string> = [];
       let allExercises: Array<ExerciseChartData> = [];
-
-      // ? Move these to workoutinterface
-      function calculateOneRepMax(weight: number, reps: number): number {
-        return Math.round(weight * (1 + reps / 30));
-      }
-
-      function findBestOneRepMax(sets: Array<WorkingSet>): number {
-        let bestOneRepMax = 0;
-        sets.forEach((set) => {
-          let setOneRepMax = calculateOneRepMax(set.weight, set.reps);
-          if (setOneRepMax > bestOneRepMax) {
-            bestOneRepMax = setOneRepMax;
-          }
-        });
-        return bestOneRepMax;
-      }
 
       workoutData.forEach((workout) => {
         workout.exercises.forEach((exercise) => {
@@ -275,7 +312,7 @@ export default Vue.extend({
                 if (exerciseChartData.chartData.datasets) {
                   if (exerciseChartData.chartData.datasets[0].data)
                     exerciseChartData.chartData.datasets[0].data.push(
-                      findBestOneRepMax(exercise.sets)
+                      this.findBestOneRepMax(exercise.sets)
                     );
                 }
 
@@ -296,7 +333,7 @@ export default Vue.extend({
               datasets: [
                 {
                   label: `${exercise.exerciseName} One Rep Max`,
-                  data: [findBestOneRepMax(exercise.sets)], // y axis
+                  data: [this.findBestOneRepMax(exercise.sets)], // y axis
                   fill: false,
                   borderColor: "red",
                 },
@@ -316,11 +353,10 @@ export default Vue.extend({
           }
         });
       });
-
+      
       return allExercises;
     },
-
-    // Chart Methods ==========================
+    // Chart Methods
     pointClicked(data: any) {
       // Figure out what point is clicked
       let idx: number | undefined = data._index;
@@ -372,6 +408,35 @@ export default Vue.extend({
       } else {
         this.videoReady = false;
       }
+    },
+    // One Rep Max calculations ===============
+    getBestSetAsString(sets: Array<WorkingSet>): string {
+      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
+      let bestSetCalculated: number = this.calculateOneRepMax(
+        sets[0].weight,
+        sets[0].reps
+      );
+
+      sets.forEach((set) => {
+        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+          bestSet = `${set.weight} x ${set.reps}`;
+          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
+        }
+      });
+      return bestSet;
+    },
+    findBestOneRepMax(sets: Array<WorkingSet>): number {
+      let bestOneRepMax = 0;
+      sets.forEach((set) => {
+        let setOneRepMax = this.calculateOneRepMax(set.weight, set.reps);
+        if (setOneRepMax > bestOneRepMax) {
+          bestOneRepMax = setOneRepMax;
+        }
+      });
+      return bestOneRepMax;
+    },
+    calculateOneRepMax(weight: number, reps: number): number {
+      return Math.round(weight * (1 + reps / 30)); // Todo Figure out wich one rep max formuala is the best
     },
     // Video Player Methods ==========================
     playVid() {

@@ -1,18 +1,44 @@
 <template>
-  <nav class="flex">
-    <router-link to="/">Squat-Watch</router-link>
-    <br />
-    <router-link to="/upload">Add Workout</router-link>
-    <button @click="signOut" v-if="userSignedIn">Sign Out</button>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <router-link class="navbar-brand" to="/">Squat-Watch</router-link>
+    </div>
 
-    <div>
-      <img
-        v-if="userHasProfileImage"
-        :src="profileImage"
-        class="img-thumbnail"
-        width="100px"
-        height="100px"
-      />
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item" v-if="userSignedIn">
+          <router-link class="nav-link active" to="/upload"
+            >Add Workout</router-link
+          >
+        </li>
+        <li class="nav-item" v-if="!userSignedIn">
+          <router-link class="nav-link" to="/signIn">Sign In</router-link>
+        </li>
+        <li class="nav-item" v-if="userSignedIn">
+          <button @click="signOut" v-if="userSignedIn">Sign Out</button>
+        </li>
+        <li class="nav-item" v-if="userSignedIn">
+          <router-link class="navbar-brand" to="/profile"
+            ><img
+              v-if="userHasProfileImage && userSignedIn"
+              :src="profileImage"
+              width="80px"
+              height="80px"
+          /></router-link>
+        </li>
+      </ul>
     </div>
   </nav>
 </template>
@@ -57,9 +83,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style scoped>
-.flex {
-  display: flex;
-}
-</style>

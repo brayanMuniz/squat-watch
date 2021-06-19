@@ -20,21 +20,29 @@ isAutoCloseable	prop
       />
     </div>
 
-    <div v-for="(workout, workoutIdx) in allWorkouts" :key="workoutIdx">
-      <div>
-        <h3>{{ workout.name }}</h3>
-
-        <!-- TODO: have exerciseName and best set on same line -->
-        <div v-for="(exercise, idx) in workout.exercises" :key="idx">
-          {{ exercise.sets.length }} x
-          <a href="#" @click="viewExercise(exercise.exerciseName)">
-            {{ exercise.exerciseName }}</a
+    <div class="card-group">
+      <div
+        class="card"
+        v-for="(workout, workoutIdx) in allWorkouts"
+        :key="workoutIdx"
+      >
+        <div class="card-body">
+          <h5 class="card-title">{{ workout.name }}</h5>
+          <p
+            class="card-text"
+            v-for="(exercise, idx) in workout.exercises"
+            :key="idx"
           >
-          | Best Set :
-          {{ getBestSetAsString(exercise.sets) }}
+            {{ exercise.sets.length }} x
+            <a href="#" @click="viewExercise(exercise.exerciseName)">
+              {{ exercise.exerciseName }}</a
+            >
+            | Best Set :
+            {{ getBestSetAsString(exercise.sets) }}
+          </p>
         </div>
-        <div>
-          {{ workout.date }}
+        <div class="card-footer">
+          <small class="text-muted"> {{ workout.date }}</small>
         </div>
       </div>
     </div>
@@ -353,7 +361,7 @@ export default Vue.extend({
           }
         });
       });
-      
+
       return allExercises;
     },
     // Chart Methods

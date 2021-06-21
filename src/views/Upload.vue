@@ -59,16 +59,16 @@
       </div>
     </div>
 
-    <!-- <div class="progress">
+    <div class="progress" v-if="uploading">
       <div
         class="progress-bar"
         role="progressbar"
-        style="width: 25%" 
+        :style="{ width: poggersUpload }"
         aria-valuenow="25"
         aria-valuemin="0"
         aria-valuemax="100"
       ></div>
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -88,6 +88,8 @@ export default Vue.extend({
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
       amountOfExercises: 1,
       exercises: Array<Exercise>(),
+      uploading: false,
+      poggersUpload: "0%",
     };
   },
   async mounted() {
@@ -136,49 +138,55 @@ export default Vue.extend({
           .collection("workouts")
           .doc(formattedDate);
 
-        for (const exercise in this.exercises) {
-          let exerciseName: string = this.exercises[exercise].exerciseName;
+        for (const exercise in workout.exercises) {
+          let exerciseName: string = workout.exercises[exercise].exerciseName;
           if (!this.userHasExerciseLogged(exerciseName))
             addNewExerciseToUserData.push(exerciseName);
 
-          if (this.exercises[exercise].videoData) {
+          // Do not upload if the file exceeds the storage of 10 mb
+          if (workout.exercises[exercise].videoData) {
             // Upload videos and get thier video url
-            for (const setWithVideo in this.exercises[exercise].videoData) {
-              let setVideoData: VideoData = this.exercises[exercise].videoData[
-                setWithVideo
-              ];
+            for (const setWithVideo in workout.exercises[exercise].videoData) {
+              let setVideoData: VideoData =
+                workout.exercises[exercise].videoData[setWithVideo];
 
-              // location in firebase storage as users/uid/workouts/exercises/exerciseName/MM-DD-YYYY
+              // location in firebase storage as users/uid/workouts/exercises/exerciseName
               let location = `users/${myUid}/workouts/exercises/${this.exercises[exercise].exerciseName}/${formattedDate}`;
               const videoRef = firebaseApp.storage().ref(location);
-              await videoRef.put(setVideoData.video);
-
-              // get their videoUrl and add to workout.set object
+              // Get video download and set it to set field
               await videoRef
-                .getDownloadURL()
-                .then((downloadUrl) => {
-                  this.exercises[exercise].sets[
-                    setVideoData.setVideoIdx
-                  ].videoUrl = downloadUrl;
+                .put(setVideoData.video)
+                .then(async (res) => {
+                  await res.ref
+                    .getDownloadURL()
+                    .then((downloadUrl) => {
+                      console.log(downloadUrl);
+                      workout.exercises[exercise].sets[
+                        setVideoData.setVideoIdx
+                      ].videoUrl = downloadUrl;
+                    })
+                    .catch((err) => {
+                      console.error(err);
+                    });
                 })
                 .catch((err) => {
                   console.error(err);
-                  // Todo: be able to remove video
-                  alert("We were not able to upload your video.");
                 });
             }
           }
 
           // If there are not videos for this set, delete em
           for (const set in this.exercises[exercise].sets) {
-            if (this.exercises[exercise].sets[set].videoUrl === "") {
-              delete this.exercises[exercise].sets[set].videoUrl;
+            if (workout.exercises[exercise].sets[set].videoUrl === "") {
+              delete workout.exercises[exercise].sets[set].videoUrl;
             }
           }
 
           // Can not provide custom video object to firestore
-          delete this.exercises[exercise].videoData;
+          delete workout.exercises[exercise].videoData;
         }
+        console.log(workout);
+        batch.set(userFirestoreWorkoutPath, workout);
 
         if (addNewExerciseToUserData.length > 0) {
           let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
@@ -194,8 +202,6 @@ export default Vue.extend({
           });
         }
 
-        batch.set(userFirestoreWorkoutPath, workout);
-        // Todo: give user a download bar
         batch
           .commit()
           .then(() => {

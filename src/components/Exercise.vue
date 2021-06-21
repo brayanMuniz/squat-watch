@@ -1,65 +1,78 @@
 <template>
   <div class="form-group">
-    <!-- TODO: Have pre selected exercises that pop up(Squat, Bench, Deadlift) -->
-    <button @click="removeExercise" type="button">
-      -R Exercise
-    </button>
     <br />
-    <label for="Exercise">Exercise Name: </label>
-    <!-- https://www.npmjs.com/package/vue-autosuggest -->
-    <vue-autosuggest
-      :suggestions="getExerciseSuggestions"
-      :input-props="{
-        id: 'autosuggest__input',
-        placeholder: 'Exercise Name',
-      }"
-      @selected="selectHandler"
-      v-model.trim="exerciseData.exerciseName"
-    >
-    <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
-      <template slot-scope="{ suggestion }">
-        <span class="my-suggestion-item">{{ suggestion.item }}</span>
-      </template>
-    </vue-autosuggest>
+    <div class="row">
+      <div class="col-sm-11">
+        <!-- https://www.npmjs.com/package/vue-autosuggest -->
+        <vue-autosuggest
+          :suggestions="getExerciseSuggestions"
+          :input-props="{
+            id: 'autosuggest__input',
+            placeholder: 'Exercise Name',
+          }"
+          @selected="selectHandler"
+          v-model.trim="exerciseData.exerciseName"
+        >
+          <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
+          <template slot-scope="{ suggestion }">
+            <span class="my-suggestion-item">{{ suggestion.item }}</span>
+          </template>
+        </vue-autosuggest>
+      </div>
+      <div class="col-sm-1">
+        <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
+      </div>
+    </div>
 
     <br />
 
     <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div v-for="(set, index) in exerciseData.sets" :key="index">
-      <button @click="removeSet(index)" type="button">-R</button>
-      <label for="Exercise1">Weight </label>
-      <input v-model="set.weight" type="number" class="form-control" />
-      <label for="Exercise1">Reps </label>
-      <input v-model="set.reps" type="number" class="form-control" />
+      <div class="row">
+        <div class="col-sm-1">
+          <i class="bi bi-x-circle-fill" @click="removeSet(index)"></i>
+        </div>
+        <div class="col">
+          <label for="Exercise1">Weight </label>
+          <input v-model="set.weight" type="number" class="form-control" />
+        </div>
+        <div class="col">
+          <label for="Exercise1">Reps </label>
+          <input v-model="set.reps" type="number" class="form-control" />
+        </div>
+        <div class="col">
+          <!-- TODO: Add a file icon for adding files -->
+          <input
+            ref="myFiles"
+            name="file-upload"
+            @change="previewFiles($event, index)"
+            type="file"
+            class="form-control"
+            id="Profile Image"
+            multiple
+          />
+        </div>
+      </div>
 
       <br />
-
-      <input
-        ref="myFiles"
-        name="file-upload"
-        @change="previewFiles($event, index)"
-        type="file"
-        class="form-control"
-        id="Profile Image"
-        multiple
-      />
     </div>
-    <button @click="addNewSet" type="button">Add New Set</button>
+
+    <button @click="addNewSet" class="btn btn-info" type="button">
+      <i class="bi bi-plus-circle-fill"></i> Set
+    </button>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import { VueAutosuggest } from "vue-autosuggest"; // ? Same problem with calendar component. When creating .d.ts file, it says there is no exported member
+// ! IF you havent added another set, you can not remove the exercise because the parent component does not recognize that this component exist
 
 export default Vue.extend({
   name: "Exercise",
   data() {
     return {
-      videoUpload: new Blob(),
-      videoReady: false,
-      // Todo: make user fill out at least exerciseName and one set
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],

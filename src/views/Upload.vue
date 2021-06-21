@@ -1,46 +1,74 @@
 <template>
   <div>
-    <h1>Upload workout here</h1>
+    <Navbar />
+    <!-- https://getbootstrap.com/docs/5.0/forms/validation/ -->
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-7">
+          <form @submit.prevent="uploadWorkout">
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="Workout Name">Workout Name: </label>
+                  <input
+                    v-model.trim="workoutName"
+                    type="text"
+                    class="form-control"
+                    id="workoutName"
+                  />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="Workout Name">Date: </label>
+                  <input
+                    v-model.trim="workoutDate"
+                    type="date"
+                    class="form-control"
+                    id="workoutDate"
+                  />
+                </div>
+              </div>
+            </div>
 
-    <form @submit.prevent="uploadWorkout">
-      <div class="form-group">
-        <label for="Workout Name">Workout Name: </label>
-        <input
-          v-model.trim="workoutName"
-          type="text"
-          class="form-control"
-          id="workoutName"
-        />
+            <!-- TODO: add a length of workout type to show how long workout was  -->
+            <!--         Figure out what time type is valid on all browsers-->
+
+            <div v-for="exercise in amountOfExercises" :key="exercise">
+              <ExerciseComponent
+                v-on:emitExerciseData="watchForData($event)"
+                v-on:removeExercise="removeExerciseComp($event)"
+              />
+              <br />
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="addExercise"
+            >
+              Add Exercise
+            </button>
+            <br />
+
+            <!-- TODO: Have a progress bar so you can tell when the user upload the video and set to database -->
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+        <div class="col"><div>History Of Workouts Here</div></div>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label for="Workout Name">Date: </label>
-        <input
-          v-model.trim="workoutDate"
-          type="date"
-          class="form-control"
-          id="workoutDate"
-        />
-      </div>
-
-      <br />
-      <!-- TODO: add a length of workout type to show how long workout was  -->
-      <!--         Figure out what time type is valid on all browsers-->
-
-      <div v-for="exercise in amountOfExercises" :key="exercise">
-        <ExerciseComponent
-          v-on:emitExerciseData="watchForData($event)"
-          v-on:removeExercise="removeExerciseComp($event)"
-        />
-        <br />
-      </div>
-
-      <button type="button" @click="addExercise">Add Exercise</button>
-      <br />
-
-      <!-- TODO: Have a progress bar so you can tell when the user upload the video and set to database -->
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    <!-- <div class="progress">
+      <div
+        class="progress-bar"
+        role="progressbar"
+        style="width: 25%" 
+        aria-valuenow="25"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      ></div>
+    </div> -->
   </div>
 </template>
 
@@ -51,6 +79,8 @@ import { firebaseApp } from "@/firebase";
 import { Exercise, VideoData, Workout } from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
+import Navbar from "@/components/Navbar.vue";
+
 export default Vue.extend({
   data() {
     return {
@@ -214,6 +244,7 @@ export default Vue.extend({
   },
   components: {
     ExerciseComponent,
+    Navbar,
   },
 });
 </script>

@@ -1,44 +1,52 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+    <!-- Todo: make navbar go on the right side of logo -->
     <div class="container-fluid">
       <router-link class="navbar-brand" to="/">Squat-Watch</router-link>
-    </div>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item" v-if="userSignedIn">
-          <router-link class="nav-link active" to="/upload"
-            >Add Workout</router-link
-          >
-        </li>
-        <li class="nav-item" v-if="!userSignedIn">
-          <router-link class="nav-link" to="/signIn">Sign In</router-link>
-        </li>
-        <li class="nav-item" v-if="userSignedIn">
-          <button @click="signOut" v-if="userSignedIn">Sign Out</button>
-        </li>
-        <li class="nav-item" v-if="userSignedIn">
-          <router-link class="navbar-brand" to="/profile"
-            ><img
-              v-if="userHasProfileImage && userSignedIn"
-              :src="profileImage"
-              width="80px"
-              height="80px"
-          /></router-link>
-        </li>
-      </ul>
+      <!-- TODO: make contents go on right side -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link class="nav-link active" to="/upload"
+              >Add Workout</router-link
+            >
+          </li>
+
+          <li class="nav-item" v-if="!userSignedIn">
+            <router-link class="nav-link" to="/signIn">Sign In</router-link>
+          </li>
+
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link @click="signOut" class="nav-link" to="/"
+              >Sign Out</router-link
+            >
+          </li>
+
+          <!-- Todo: if dropdown toggle is activated, dont show this  -->
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link class="navbar-brand" to="/profile"
+              ><img
+                v-if="userHasProfileImage && userSignedIn"
+                :src="profileImage"
+                width="60px"
+                height="60px"
+            /></router-link>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
 </template>

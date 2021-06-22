@@ -54,21 +54,24 @@
             <!-- TODO: Have a progress bar so you can tell when the user upload the video and set to database -->
             <button type="submit" class="btn btn-primary">Submit</button>
           </form>
+          <div class="progress" v-if="uploading">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              :style="{ width: poggersUpload }"
+              aria-valuenow="25"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
         </div>
+
         <div class="col"><div>History Of Workouts Here</div></div>
       </div>
     </div>
 
-    <div class="progress" v-if="uploading">
-      <div
-        class="progress-bar"
-        role="progressbar"
-        :style="{ width: poggersUpload }"
-        aria-valuenow="25"
-        aria-valuemin="0"
-        aria-valuemax="100"
-      ></div>
-    </div>
+    <!-- TODO: the way video uploads will work is by getting % of videos uploaded -->
+    <!-- So if you have 3 videos to upload and you got the videoURL for 2, percentage will be 66%  -->
   </div>
 </template>
 
@@ -118,6 +121,8 @@ export default Vue.extend({
         // Date in MM-DD-YYYY
         let formattedDate = moment(this.workoutDate).format("MM-DD-YYYY");
 
+        this.uploading = true;
+
         // With a batch multiple writes to the database are able to be committed at once, and none are commited if any fail
         let batch = firebaseApp.firestore().batch();
 
@@ -138,6 +143,7 @@ export default Vue.extend({
           .collection("workouts")
           .doc(formattedDate);
 
+        let uploadAmount = 0;
         for (const exercise in workout.exercises) {
           let exerciseName: string = workout.exercises[exercise].exerciseName;
           if (!this.userHasExerciseLogged(exerciseName))
@@ -153,7 +159,7 @@ export default Vue.extend({
               // location in firebase storage as users/uid/workouts/exercises/exerciseName
               let location = `users/${myUid}/workouts/exercises/${this.exercises[exercise].exerciseName}/${formattedDate}`;
               const videoRef = firebaseApp.storage().ref(location);
-              // Get video download and set it to set field
+              // Get video download and set it to workout.set field
               await videoRef
                 .put(setVideoData.video)
                 .then(async (res) => {
@@ -184,8 +190,12 @@ export default Vue.extend({
 
           // Can not provide custom video object to firestore
           delete workout.exercises[exercise].videoData;
+
+          // Show user progress of uploads
+          uploadAmount++;
+          this.poggersUpload = `${(uploadAmount / workout.exercises.length) *
+            100}%`;
         }
-        console.log(workout);
         batch.set(userFirestoreWorkoutPath, workout);
 
         if (addNewExerciseToUserData.length > 0) {
@@ -205,17 +215,19 @@ export default Vue.extend({
         batch
           .commit()
           .then(() => {
-            console.log("It worked");
+            alert("Your workout has been uploaded.");
+            this.uploading = false;
           })
           .catch(() => {
+            this.uploading = false;
+            alert("There was a problem uploading your workout.");
             console.error("Batch no good SADGE :(");
           });
       }
     },
     // Component Data Sync ===================================
     addExercise() {
-      // A new component will be rendered off of this and data will sync up automotically
-      this.amountOfExercises++;
+      this.amountOfExercises++; // A new component will be rendered off of this and data will sync up automotically
     },
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
@@ -227,6 +239,7 @@ export default Vue.extend({
           }
         });
       }
+
       if (exerciseIdx !== undefined) {
         this.exercises.splice(exerciseIdx, 1);
         this.amountOfExercises--;

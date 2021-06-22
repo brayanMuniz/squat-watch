@@ -53,8 +53,12 @@ isAutoCloseable	prop
       <video ref="videoPlayer" width="320" height="240">
         <source :src="videoUrl" />
       </video>
-      <button @click="playVid" type="button">Play</button>
-      <button @click="pauseVid" type="button">Pause</button>
+      <button @click="playVid" type="button">
+        <i class="bi bi-play-btn-fill"></i>
+      </button>
+      <button @click="pauseVid" type="button">
+        <i class="bi bi-pause-btn-fill"></i>
+      </button>
     </div>
 
     <div>Stats</div>
@@ -108,6 +112,7 @@ export default Vue.extend({
         isDateRange: true,
         disabledDates: ["afterToday"],
         isDark: true,
+        // markedDates: ["6/15/2021"],
       },
       pickedDates: Array<string>(),
     };

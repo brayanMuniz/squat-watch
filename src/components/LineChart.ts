@@ -16,7 +16,7 @@ export default class LineChart extends Mixins(mixins.reactiveProp, Line) {
     if (this.options) {
       // Adds the onClick function to transmit data to the parent component
       const totalOptions = this.options;
-      
+
       // When a user clicks on a point, it will return the videoUrl for that day
       totalOptions["onClick"] = (
         event?: MouseEvent | undefined,
@@ -49,27 +49,26 @@ export default class LineChart extends Mixins(mixins.reactiveProp, Line) {
               | null
               | undefined = 0;
 
-            if (idx) {
+            // cant just user if(idx), because if idx = 0, then it will return false
+            if (idx !== undefined) {
               if (this.chartData.labels) {
                 label = this.chartData.labels[idx];
+                this.workingSets?.forEach((dayOf) => {
+                  if (dayOf.date === label) {
+                    dayOf.sets.forEach((set) => {
+                      if (set.videoUrl) videoData.videoUrl = set.videoUrl;
+                    });
+                  }
+                });
               }
 
               if (this.chartData.datasets)
                 if (this.chartData.datasets[0].data)
                   dataPoint = this.chartData.datasets[0].data[idx];
-
-              this.workingSets?.forEach((dayOf) => {
-                if (dayOf.date === label) {
-                  dayOf.sets.forEach((set) => {
-                    if (set.videoUrl !== "" || set.videoUrl !== undefined)
-                      videoData.videoUrl = set.videoUrl;
-                  });
-                }
-              });
             }
-            this.$emit("clickedPoint", videoData);
-          } else this.$emit("clickedPoint", videoData);
+          }
         }
+        this.$emit("clickedPoint", videoData);
       };
 
       // When user hovers over a point it will show weight x reps
@@ -82,7 +81,6 @@ export default class LineChart extends Mixins(mixins.reactiveProp, Line) {
           ) {
             if (workingSets) {
               let actualSet = "";
-              console.log(workingSets);
               workingSets.forEach((set) => {
                 if (set.date === tooltipItem.label) {
                   actualSet = `${set.sets[0].weight} x ${set.sets[0].reps}`; // todo: figure out which is one rep max

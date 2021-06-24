@@ -11,43 +11,99 @@ isAutoCloseable	prop
       v-on:choseDay="getDateRange($event)"
     ></FunctionalCalendar>
 
-    <div v-if="dataReady">
-      <!-- :options prop needs to be passed in or there will be an error -->
-      <LineChart
-        :chartData="dataCollection"
-        :options="chartOptions"
-        v-on:clickedPoint="pointClicked($event)"
-      />
+    <!-- Todo: when clicking a point, emit data that will go to col-md-4(video player) that will show video -->
+    <div
+      class="row"
+      v-for="exercise in allExerciseChartData"
+      :key="exercise.exerciseName"
+    >
+      <div class="col-md-5">
+        <div v-if="dataReady">
+          <!-- :options prop needs to be passed in or there will be an error -->
+          <LineChart
+            :chartData="exercise.chartData"
+            :options="chartOptions"
+            :workingSets="exercise.setsWithDates"
+            :exerciseName="exercise.exerciseName"
+            v-on:clickedPoint="changeVideoFromExercise($event)"
+          />
+        </div>
+      </div>
+
+      <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts -->
+      <!-- TODO: when a date is seleceted, have it highlighted  -->
+      <div class="col-md-4">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th>One Rep Max</th>
+              <th scope="col">Best Set</th>
+              <th scope="col">Amount Of Sets</th>
+              <th scope="col">Video</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
+              <th scope="row">{{ e.date }}</th>
+              <td>{{ findBestOneRepMax(e.sets) }}</td>
+              <td>{{ getBestSetAsString(e.sets) }}</td>
+              <td>{{ e.sets.length }}</td>
+              <td v-if="getVideoUrlFromSets(e.sets)">
+                <i
+                  class="bi bi-play-btn-fill"
+                  @click="
+                    changeVideoFromExercise({
+                      exerciseName: exercise.exerciseName,
+                      videoUrl: getVideoUrlFromSets(e.sets),
+                    })
+                  "
+                ></i>
+              </td>
+              <td v-else>No Video</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-md-3">
+        <div v-if="exercise.videoReady">
+          <video ref="videoPlayer" width="320" height="240" controls>
+            <source :src="exercise.videoUrl" />
+          </video>
+        </div>
+        <div v-else>No Video</div>
+      </div>
     </div>
 
-    <div v-for="(workout, workoutIdx) in allWorkouts" :key="workoutIdx">
-      <div>
-        <h3>{{ workout.name }}</h3>
-
-        <!-- TODO: have exerciseName and best set on same line -->
-        <div v-for="(exercise, idx) in workout.exercises" :key="idx">
-          {{ exercise.sets.length }} x
-          <a href="#" @click="viewExercise(exercise.exerciseName)">
-            {{ exercise.exerciseName }}</a
+    <div class="card-group">
+      <div
+        class="card"
+        v-for="(workout, workoutIdx) in allWorkouts"
+        :key="workoutIdx"
+      >
+        <div class="card-body">
+          <h5 class="card-title">{{ workout.name }}</h5>
+          <p
+            class="card-text"
+            v-for="(exercise, idx) in workout.exercises"
+            :key="idx"
           >
-          | Best Set :
-          {{ getBestSetAsString(exercise.sets) }}
+            {{ exercise.sets.length }} x
+            <a href="#" @click="viewExercise(exercise.exerciseName)">
+              {{ exercise.exerciseName }}</a
+            >
+            | Best Set :
+            {{ getBestSetAsString(exercise.sets) }}
+          </p>
         </div>
-        <div>
-          {{ workout.date }}
+        <div class="card-footer">
+          <small class="text-muted"> {{ workout.date }}</small>
         </div>
       </div>
     </div>
 
     <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
-
-    <div v-if="videoReady">
-      <video ref="videoPlayer" width="320" height="240">
-        <source :src="videoUrl" />
-      </video>
-      <button @click="playVid" type="button">Play</button>
-      <button @click="pauseVid" type="button">Pause</button>
-    </div>
 
     <div>Stats</div>
   </div>
@@ -85,6 +141,9 @@ export default Vue.extend({
       chartOptions: {
         responsive: true,
         maintainAspectRatio: false,
+        tooltips: {
+          callbacks: {},
+        },
       },
       noDataInThisDateRange: false,
       startDate: moment()
@@ -100,6 +159,7 @@ export default Vue.extend({
         isDateRange: true,
         disabledDates: ["afterToday"],
         isDark: true,
+        // markedDates: ["6/15/2021"],
       },
       pickedDates: Array<string>(),
     };
@@ -107,7 +167,6 @@ export default Vue.extend({
   async created() {
     await this.retriveWorkoutData(this.startDate, this.endDate)
       .then((res) => {
-        console.log(res);
         this.allWorkouts = res;
         let convertedData:
           | Array<ExerciseChartData>
@@ -170,7 +229,6 @@ export default Vue.extend({
                   this.dataCollection =
                     convertedData[selectedExerciseIdx].chartData;
                   this.allExerciseChartData = convertedData;
-                  console.log(this.allExerciseChartData);
                   this.dataReady = true;
                 } else {
                   console.error("FIX ME!");
@@ -349,64 +407,37 @@ export default Vue.extend({
               exerciseName: exercise.exerciseName,
               chartData: convertedDataToChart,
               setsWithDates: [formattedSets],
+              videoReady: false,
+              videoUrl: "",
             });
           }
         });
       });
-      
+
       return allExercises;
     },
     // Chart Methods
-    pointClicked(data: any) {
-      // Figure out what point is clicked
-      let idx: number | undefined = data._index;
-      let label:
-        | string
-        | number
-        | string[]
-        | Moment
-        | Date
-        | number[]
-        | Date[]
-        | Moment[] = -1;
+    changeVideoFromExercise(videoData: any) {
+      if (videoData.exerciseName) {
+        let exerciseIdx = -1;
+        this.allExerciseChartData.forEach((exercise, idx) => {
+          if (exercise.exerciseName == videoData.exerciseName) {
+            exerciseIdx = idx;
+          }
+        });
 
-      let dataPoint: number | number[] | ChartPoint | null | undefined = 0;
-
-      if (idx !== undefined) {
-        // Get the label
-        if (this.dataCollection.labels) label = this.dataCollection.labels[idx];
-
-        // Get the datapoint
-        if (this.dataCollection.datasets !== undefined) {
-          // since you will only be checking on one dataset you can just go to dataset 0. The first and only one
-          if (this.dataCollection.datasets[0].data !== undefined)
-            dataPoint = this.dataCollection.datasets[0].data[idx];
+        if (
+          videoData.videoUrl !== undefined &&
+          videoData.videoUrl !== "" &&
+          exerciseIdx !== -1
+        ) {
+          this.allExerciseChartData[exerciseIdx].videoReady = false;
+          this.allExerciseChartData[exerciseIdx].videoUrl = videoData.videoUrl;
+          this.allExerciseChartData[exerciseIdx].videoReady = true;
+        } else {
+          this.allExerciseChartData[exerciseIdx].videoUrl = "";
+          this.allExerciseChartData[exerciseIdx].videoReady = false;
         }
-      }
-
-      // Get video Url if it exist
-      let videoUrl: string | undefined = undefined;
-      this.allExerciseChartData.forEach((exercise) => {
-        if (exercise.exerciseName === this.currentlySelectedExercise) {
-          exercise.setsWithDates.forEach((sets) => {
-            if (sets.date === label) {
-              sets.sets.forEach((set) => {
-                if (set.videoUrl !== "" || set.videoUrl !== undefined)
-                  videoUrl = set.videoUrl;
-              });
-            }
-          });
-        }
-      });
-
-      console.log(`Label(x) is: ${label}. Datapoint(y) is: ${dataPoint}`);
-
-      if (videoUrl !== undefined) {
-        this.videoUrl = videoUrl;
-        this.videoReady = true;
-        console.log(`Video URL for video is ${videoUrl}`);
-      } else {
-        this.videoReady = false;
       }
     },
     // One Rep Max calculations ===============
@@ -438,12 +469,23 @@ export default Vue.extend({
     calculateOneRepMax(weight: number, reps: number): number {
       return Math.round(weight * (1 + reps / 30)); // Todo Figure out wich one rep max formuala is the best
     },
-    // Video Player Methods ==========================
-    playVid() {
-      this.$refs["videoPlayer"].play();
+    getVideoUrlFromSets(sets: Array<WorkingSet>): string {
+      let videoUrl = "";
+      sets.forEach((set) => {
+        if (set.videoUrl) videoUrl = set.videoUrl;
+      });
+      return videoUrl;
     },
-    pauseVid() {
-      this.$refs["videoPlayer"].pause();
+  },
+  computed: {
+    getChartWorkingSets(): Array<ChartWorkingSet> {
+      let chartData: Array<ChartWorkingSet> = [];
+      console.log(this.currentlySelectedExercise);
+      this.allExerciseChartData.forEach((exerciseChartData) => {
+        if (exerciseChartData.exerciseName == this.currentlySelectedExercise)
+          chartData = exerciseChartData.setsWithDates;
+      });
+      return chartData;
     },
   },
   components: {

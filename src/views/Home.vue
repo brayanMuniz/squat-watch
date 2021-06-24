@@ -1,17 +1,49 @@
 <template>
-  <div class="home">
+  <div>
     <Navbar />
 
-    <!-- TODO: make this a button that collapses with 
-isAutoCloseable	prop 
- -->
-    <FunctionalCalendar
-      v-model="calendarData"
-      :configs="calendarConfigs"
-      v-on:choseDay="getDateRange($event)"
-    ></FunctionalCalendar>
+    <!-- TODO: move btn to right side -->
+    <!-- Button trigger modal -->
+    <button
+      type="button"
+      class="btn btn-primary fixed-bottom"
+      data-bs-toggle="modal"
+      data-bs-target="#calendarPopUp"
+    >
+      <i class="bi bi-calendar2-range-fill"></i>
+    </button>
 
-    <!-- Todo: when clicking a point, emit data that will go to col-md-4(video player) that will show video -->
+    <!-- Calendar Modal -->
+    <div
+      class="modal fade"
+      id="calendarPopUp"
+      tabindex="-1"
+      aria-labelledby="calendarPopUp"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="calendarPopUp">calendar</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <FunctionalCalendar
+              v-model="calendarData"
+              :configs="calendarConfigs"
+              v-on:choseDay="getDateRange($event)"
+            ></FunctionalCalendar>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Chart, Table and video. -->
     <div
       class="row"
       v-for="exercise in allExerciseChartData"
@@ -73,9 +105,15 @@ isAutoCloseable	prop
             Your browser does not support video.
           </video>
         </div>
-        <div v-else-if="exercise.videoLoading" width="320" height="240">
-          <i class="bi bi-hourglass-bottom"></i>
+
+        <div
+          class="spinner-border d-flex justify-content-center"
+          role="status"
+          v-else-if="exercise.videoLoading"
+        >
+          <span class="visually-hidden">Loading...</span>
         </div>
+
         <div v-else>No Video</div>
       </div>
     </div>
@@ -94,9 +132,7 @@ isAutoCloseable	prop
             :key="idx"
           >
             {{ exercise.sets.length }} x
-            <a href="#" @click="viewExercise(exercise.exerciseName)">
-              {{ exercise.exerciseName }}</a
-            >
+            {{ exercise.exerciseName }}
             | Best Set :
             {{ getBestSetAsString(exercise.sets) }}
           </p>
@@ -329,27 +365,6 @@ export default Vue.extend({
         }
       } else {
         return Promise.reject("Not signed in ");
-      }
-    },
-    async viewExercise(exerciseName: string) {
-      this.dataReady = false;
-      this.currentlySelectedExercise = exerciseName;
-
-      let selectedExerciseIdx = -1;
-      console.log(this.allExerciseChartData);
-      this.allExerciseChartData.forEach((data, idx) => {
-        if (data.exerciseName === this.currentlySelectedExercise)
-          selectedExerciseIdx = idx;
-      });
-
-      if (selectedExerciseIdx !== -1) {
-        this.dataCollection = this.allExerciseChartData[
-          selectedExerciseIdx
-        ].chartData;
-        console.log(this.allExerciseChartData);
-        this.dataReady = true;
-      } else {
-        console.error("FIX ME!");
       }
     },
     // Converts every exercise into one set of ChartData obj.

@@ -17,7 +17,7 @@ isAutoCloseable	prop
       v-for="exercise in allExerciseChartData"
       :key="exercise.exerciseName"
     >
-      <div class="col-md-8">
+      <div class="col-md-5">
         <div v-if="dataReady">
           <!-- :options prop needs to be passed in or there will be an error -->
           <LineChart
@@ -25,12 +25,48 @@ isAutoCloseable	prop
             :options="chartOptions"
             :workingSets="exercise.setsWithDates"
             :exerciseName="exercise.exerciseName"
-            v-on:clickedPoint="getVideoUrlFromPoint($event)"
+            v-on:clickedPoint="changeVideoFromExercise($event)"
           />
         </div>
       </div>
-      {{ exercise.videoReady }}
+
+      <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts -->
+      <!-- TODO: when a date is seleceted, have it highlighted  -->
       <div class="col-md-4">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th>One Rep Max</th>
+              <th scope="col">Best Set</th>
+              <th scope="col">Amount Of Sets</th>
+              <th scope="col">Video</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
+              <th scope="row">{{ e.date }}</th>
+              <td>{{ findBestOneRepMax(e.sets) }}</td>
+              <td>{{ getBestSetAsString(e.sets) }}</td>
+              <td>{{ e.sets.length }}</td>
+              <td v-if="getVideoUrlFromSets(e.sets)">
+                <i
+                  class="bi bi-play-btn-fill"
+                  @click="
+                    changeVideoFromExercise({
+                      exerciseName: exercise.exerciseName,
+                      videoUrl: getVideoUrlFromSets(e.sets),
+                    })
+                  "
+                ></i>
+              </td>
+              <td v-else>No Video</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-md-3">
         <div v-if="exercise.videoReady">
           <video ref="videoPlayer" width="320" height="240" controls>
             <source :src="exercise.videoUrl" />
@@ -131,7 +167,6 @@ export default Vue.extend({
   async created() {
     await this.retriveWorkoutData(this.startDate, this.endDate)
       .then((res) => {
-        console.log(res);
         this.allWorkouts = res;
         let convertedData:
           | Array<ExerciseChartData>
@@ -382,8 +417,7 @@ export default Vue.extend({
       return allExercises;
     },
     // Chart Methods
-    getVideoUrlFromPoint(videoData: any) {
-      console.log(videoData);
+    changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
         let exerciseIdx = -1;
         this.allExerciseChartData.forEach((exercise, idx) => {
@@ -397,6 +431,7 @@ export default Vue.extend({
           videoData.videoUrl !== "" &&
           exerciseIdx !== -1
         ) {
+          this.allExerciseChartData[exerciseIdx].videoReady = false;
           this.allExerciseChartData[exerciseIdx].videoUrl = videoData.videoUrl;
           this.allExerciseChartData[exerciseIdx].videoReady = true;
         } else {
@@ -433,6 +468,13 @@ export default Vue.extend({
     },
     calculateOneRepMax(weight: number, reps: number): number {
       return Math.round(weight * (1 + reps / 30)); // Todo Figure out wich one rep max formuala is the best
+    },
+    getVideoUrlFromSets(sets: Array<WorkingSet>): string {
+      let videoUrl = "";
+      sets.forEach((set) => {
+        if (set.videoUrl) videoUrl = set.videoUrl;
+      });
+      return videoUrl;
     },
   },
   computed: {

@@ -51,7 +51,7 @@ isAutoCloseable	prop
               <td>{{ e.sets.length }}</td>
               <td v-if="getVideoUrlFromSets(e.sets)">
                 <i
-                  class="bi bi-play-btn-fill"
+                  class="bi bi-play-btn-fill hoverable"
                   @click="
                     changeVideoFromExercise({
                       exerciseName: exercise.exerciseName,
@@ -60,7 +60,7 @@ isAutoCloseable	prop
                   "
                 ></i>
               </td>
-              <td v-else>No Video</td>
+              <td v-else><i class="bi bi-slash-circle"></i></td>
             </tr>
           </tbody>
         </table>
@@ -68,9 +68,13 @@ isAutoCloseable	prop
 
       <div class="col-md-3">
         <div v-if="exercise.videoReady">
-          <video ref="videoPlayer" width="320" height="240" controls>
+          <video ref="videoPlayer" width="320" height="240" autoplay controls>
             <source :src="exercise.videoUrl" />
+            Your browser does not support video.
           </video>
+        </div>
+        <div v-else-if="exercise.videoLoading" width="320" height="240">
+          <i class="bi bi-hourglass-bottom"></i>
         </div>
         <div v-else>No Video</div>
       </div>
@@ -409,6 +413,7 @@ export default Vue.extend({
               setsWithDates: [formattedSets],
               videoReady: false,
               videoUrl: "",
+              videoLoading: false,
             });
           }
         });
@@ -432,8 +437,14 @@ export default Vue.extend({
           exerciseIdx !== -1
         ) {
           this.allExerciseChartData[exerciseIdx].videoReady = false;
-          this.allExerciseChartData[exerciseIdx].videoUrl = videoData.videoUrl;
-          this.allExerciseChartData[exerciseIdx].videoReady = true;
+          this.allExerciseChartData[exerciseIdx].videoLoading = true;
+
+          setTimeout(() => {
+            this.allExerciseChartData[exerciseIdx].videoUrl =
+              videoData.videoUrl;
+            this.allExerciseChartData[exerciseIdx].videoReady = true;
+            this.allExerciseChartData[exerciseIdx].videoLoading = false;
+          }, 500);
         } else {
           this.allExerciseChartData[exerciseIdx].videoUrl = "";
           this.allExerciseChartData[exerciseIdx].videoReady = false;
@@ -495,3 +506,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style scoped>
+.hoverable {
+  cursor: pointer;
+}
+</style>

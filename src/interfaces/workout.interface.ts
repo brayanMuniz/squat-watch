@@ -28,6 +28,7 @@ export interface ExerciseChartData {
   setsWithDates: Array<ChartWorkingSet>;
   videoReady: boolean;
   videoUrl: string;
+  videoLoading: boolean
 }
 
 // Will have date

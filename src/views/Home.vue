@@ -44,101 +44,113 @@
     </div>
 
     <!-- Workout Chart, Table and video. -->
+    <div class="row">
+      <div
+        class="col-xxl-6"
+        v-for="exercise in allExerciseChartData"
+        :key="exercise.exerciseName"
+      >
+        <div class="row">
+          <div class="col-lg-5">
+            <div v-if="dataReady">
+              <!-- :options prop needs to be passed in or there will be an error -->
+              <LineChart
+                :chartData="exercise.chartData"
+                :options="chartOptions"
+                :workingSets="exercise.setsWithDates"
+                :exerciseName="exercise.exerciseName"
+                v-on:clickedPoint="changeVideoFromExercise($event)"
+              />
+            </div>
+          </div>
+          <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
+          <div class="col-lg-4">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th>1 Rep Max</th>
+                  <th scope="col">Best Set</th>
+                  <th scope="col">Amount Of Sets</th>
+                  <th scope="col">Video</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
+                  <th scope="row">{{ e.date }}</th>
+                  <td>{{ findBestOneRepMax(e.sets) }}</td>
+                  <td>{{ getBestSetAsString(e.sets) }}</td>
+                  <td>{{ e.sets.length }}</td>
+                  <td v-if="getVideoUrlFromSets(e.sets)">
+                    <i
+                      class="bi bi-play-btn-fill hoverable"
+                      @click="
+                        changeVideoFromExercise({
+                          exerciseName: exercise.exerciseName,
+                          videoUrl: getVideoUrlFromSets(e.sets),
+                        })
+                      "
+                    ></i>
+                  </td>
+                  <td v-else><i class="bi bi-slash-circle"></i></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    <div
-      class="row"
-      v-for="exercise in allExerciseChartData"
-      :key="exercise.exerciseName"
-    >
-      <div class="col-md-5">
-        <div v-if="dataReady">
-          <!-- :options prop needs to be passed in or there will be an error -->
-          <LineChart
-            :chartData="exercise.chartData"
-            :options="chartOptions"
-            :workingSets="exercise.setsWithDates"
-            :exerciseName="exercise.exerciseName"
-            v-on:clickedPoint="changeVideoFromExercise($event)"
-          />
+          <div class="col-lg-3">
+            <div v-if="exercise.videoReady">
+              <video
+                ref="videoPlayer"
+                width="320"
+                height="240"
+                autoplay
+                controls
+              >
+                <source :src="exercise.videoUrl" />
+                Your browser does not support video.
+              </video>
+            </div>
+
+            <div
+              class="spinner-border d-flex justify-content-center"
+              role="status"
+              v-else-if="exercise.videoLoading"
+            >
+              <span class="visually-hidden">Loading...</span>
+            </div>
+
+            <div v-else>No Video</div>
+          </div>
         </div>
-      </div>
-
-      <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-      <div class="col-md-4">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Date</th>
-              <th>One Rep Max</th>
-              <th scope="col">Best Set</th>
-              <th scope="col">Amount Of Sets</th>
-              <th scope="col">Video</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
-              <th scope="row">{{ e.date }}</th>
-              <td>{{ findBestOneRepMax(e.sets) }}</td>
-              <td>{{ getBestSetAsString(e.sets) }}</td>
-              <td>{{ e.sets.length }}</td>
-              <td v-if="getVideoUrlFromSets(e.sets)">
-                <i
-                  class="bi bi-play-btn-fill hoverable"
-                  @click="
-                    changeVideoFromExercise({
-                      exerciseName: exercise.exerciseName,
-                      videoUrl: getVideoUrlFromSets(e.sets),
-                    })
-                  "
-                ></i>
-              </td>
-              <td v-else><i class="bi bi-slash-circle"></i></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="col-md-3">
-        <div v-if="exercise.videoReady">
-          <video ref="videoPlayer" width="320" height="240" autoplay controls>
-            <source :src="exercise.videoUrl" />
-            Your browser does not support video.
-          </video>
-        </div>
-
-        <div
-          class="spinner-border d-flex justify-content-center"
-          role="status"
-          v-else-if="exercise.videoLoading"
-        >
-          <span class="visually-hidden">Loading...</span>
-        </div>
-
-        <div v-else>No Video</div>
       </div>
     </div>
-    <div class="card-group container-fluid">
+
+    <!-- History of Workouts -->
+    <div class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5">
       <div
-        class="card mx-1 text-dark bg-light"
+        class="col"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
       >
-        <div class="card-body">
-          <h5 class="card-title">{{ workout.name }}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">
-            {{ dateToMonthDay(workout.date) }}
-          </h6>
+        <div class="card text-dark bg-light">
+          <div class="card-body">
+            <h5 class="card-title">{{ workout.name }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              {{ dateToMonthDay(workout.date) }}
+            </h6>
 
-          <p
-            class="card-text my-0"
-            v-for="(exercise, idx) in workout.exercises"
-            :key="idx"
-          >
-            {{ exercise.sets.length }} x
-            {{ exercise.exerciseName }}
-            | Best Set :
-            {{ getBestSetAsString(exercise.sets) }}
-          </p>
+            <p
+              class="card-text my-0"
+              v-for="(exercise, idx) in workout.exercises"
+              :key="idx"
+            >
+              {{ exercise.sets.length }} x
+              {{ exercise.exerciseName }}
+              | Best Set :
+              {{ getBestSetAsString(exercise.sets) }}
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,40 +1,71 @@
 <template>
-  <form @submit.prevent="makeNewUser">
-    <div class="form-group">
-      <label for="Email">User Name</label>
-      <input type="text" class="form-control" v-model.trim="userName" />
+  <form @submit.prevent="makeNewUser" class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="form-group">
+          <label for="userName">User Name</label>
+          <input type="text" class="form-control" v-model.trim="userName" />
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="Email">Email address</label>
+          <input
+            type="email"
+            class="form-control"
+            id="Email"
+            aria-describedby="emailHelp"
+            v-model.trim="email"
+          />
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="Password">Password</label>
+          <input
+            v-model.trim="password"
+            type="password"
+            class="form-control"
+            id="Password"
+          />
+        </div>
+      </div>
+      <div class="col">
+        <label for="visibility">Visibility</label>
+
+        <select
+          class="form-select"
+          aria-label="Default select example"
+          v-model="visibility"
+        >
+          <option value="Public">Public</option>
+          <option value="Friends Only">Friends Only</option>
+          <option value="Private">Private</option>
+        </select>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="Email">Email address</label>
-      <input
-        type="email"
-        class="form-control"
-        id="Email"
-        aria-describedby="emailHelp"
-        v-model.trim="email"
-      />
+    <div class="row">
+      <div class="col-3">
+        <label>Current Age </label>
+        <input v-model="age" type="number" class="form-control" />
+      </div>
+      <div class="col-3">
+        <label>Current Weight </label>
+        <input v-model="weight" type="number" class="form-control" />
+      </div>
+      <div class="col-6">
+        <label for="description" class="form-label"
+          >Describe Yourself For Others to See</label
+        >
+        <textarea
+          class="form-control"
+          id="exampleFormControlTextarea1"
+          rows="3"
+          v-model.trim="description"
+        ></textarea>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label for="Password">Password</label>
-      <input
-        v-model.trim="password"
-        type="password"
-        class="form-control"
-        id="Password"
-      />
-    </div>
-    <!-- Public, Friends Only, Private -->
-    <select
-      class="form-select"
-      aria-label="Default select example"
-      v-model="visibility"
-    >
-      <option value="Public">Public</option>
-      <option value="Friends Only">Friends Only</option>
-      <option value="Private">Private</option>
-    </select>
 
     <!--Initial Lifts  -->
     <div>Current Poggers</div>
@@ -43,34 +74,52 @@
       v-for="(exercise, index) in initialLiftsData"
       :key="index"
     >
-      <button @click="removeLift(index)" type="button">-R</button>
+      <div class="row mb-3">
+        <!-- TODO: make this bigger -->
+        <div class="col-1">
+          <i
+            class="bi bi-x-circle-fill hoverable"
+            @click="removeLift(index)"
+          ></i>
+        </div>
+        <div class="col">
+          <label>Exercise Name</label>
+          <input v-model="exercise.name" class="form-control" type="text" />
+        </div>
+        <div class="col">
+          <label>Weight </label>
+          <input v-model="exercise.weight" type="number" class="form-control" />
+        </div>
+        <div class="col">
+          <label>Reps </label>
+          <input v-model="exercise.reps" type="number" class="form-control" />
+        </div>
+      </div>
 
       <!-- Todo: Add a dropdown of suggested lifts, Squat, Bench, Deadlift etx  -->
-      <label>Exercise Name</label>
-      <input v-model="exercise.name" type="text" />
-
-      <label>Weight </label>
-      <input v-model="exercise.weight" type="number" class="form-control" />
-
-      <label>Reps </label>
-      <input v-model="exercise.reps" type="number" class="form-control" />
     </div>
-    <button @click="addNewExercise" type="button">Add New Exercise</button>
+    <button @click="addNewExercise" class="btn btn-info" type="button">
+      Add New Exercise
+    </button>
 
-    <!-- Upload a profile image -->
-    <div class="form-group">
-      <label for="Starting Amount">Profile Picture :</label>
-      <input
-        ref="upload"
-        name="file-upload"
-        @change="previewFiles"
-        type="file"
-        class="form-control"
-        id="Profile Image"
-      />
+    <div class="row">
+      <div class="col">
+        <div class="form-group">
+          <label for="Starting Amount">Profile Picture :</label>
+          <input
+            ref="upload"
+            name="file-upload"
+            @change="previewFiles"
+            type="file"
+            class="form-control"
+            id="Profile Image"
+          />
+        </div>
+      </div>
+      <div class="col-3">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
     </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 </template>
 
@@ -85,6 +134,9 @@ export default Vue.extend({
       userName: "", // Todo: make sure userName is not taken
       email: "",
       password: "",
+      age: 0,
+      weight: 0,
+      description: "",
       visibility: "Public",
       profileImageUrl: "",
       initialLiftsData: [{ name: "Squat", weight: 0, reps: 5 }], // Todo: make sure every exercise is unique
@@ -166,6 +218,9 @@ export default Vue.extend({
       let initalUserData: any = {
         dateJoined: moment().format("MM-DD-YYYY"),
         initialLifts: this.initialLiftsData,
+        age: this.age,
+        weight: this.weight,
+        description: this.description,
         userName: this.userName,
         visibility: this.visibility,
         exercises: exercises,
@@ -207,7 +262,11 @@ export default Vue.extend({
       return Promise.resolve(userNameTaken);
     },
     addNewExercise() {
-      this.initialLiftsData.push({ name: "", weight: 0, reps: 0 });
+      if (this.initialLiftsData.length > 10) {
+        alert("No more than 10");
+      } else {
+        this.initialLiftsData.push({ name: "", weight: 0, reps: 0 });
+      }
     },
     removeLift(idx: number) {
       if (this.initialLiftsData[idx]) {
@@ -225,3 +284,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style scoped>
+.hoverable {
+  cursor: pointer;
+}
+</style>

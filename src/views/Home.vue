@@ -44,6 +44,7 @@
     </div>
 
     <!-- Workout Chart, Table and video. -->
+
     <div
       class="row"
       v-for="exercise in allExerciseChartData"
@@ -62,8 +63,7 @@
         </div>
       </div>
 
-      <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts -->
-      <!-- TODO: when a date is seleceted, have it highlighted  -->
+      <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
       <div class="col-md-4">
         <table class="table">
           <thead>
@@ -117,17 +117,20 @@
         <div v-else>No Video</div>
       </div>
     </div>
-
-    <div class="card-group">
+    <div class="card-group container-fluid">
       <div
-        class="card"
+        class="card mx-1 text-dark bg-light"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
       >
         <div class="card-body">
           <h5 class="card-title">{{ workout.name }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">
+            {{ dateToMonthDay(workout.date) }}
+          </h6>
+
           <p
-            class="card-text"
+            class="card-text my-0"
             v-for="(exercise, idx) in workout.exercises"
             :key="idx"
           >
@@ -136,9 +139,6 @@
             | Best Set :
             {{ getBestSetAsString(exercise.sets) }}
           </p>
-        </div>
-        <div class="card-footer">
-          <small class="text-muted"> {{ workout.date }}</small>
         </div>
       </div>
     </div>
@@ -412,7 +412,7 @@ export default Vue.extend({
                   label: `${exercise.exerciseName} One Rep Max`,
                   data: [this.findBestOneRepMax(exercise.sets)], // y axis
                   fill: false,
-                  borderColor: "red",
+                  borderColor: "#0000a5",
                 },
               ],
             };
@@ -501,6 +501,9 @@ export default Vue.extend({
         if (set.videoUrl) videoUrl = set.videoUrl;
       });
       return videoUrl;
+    },
+    dateToMonthDay(date: string): string {
+      return moment(date).format("MMM DD");
     },
   },
   computed: {

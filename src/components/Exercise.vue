@@ -2,23 +2,16 @@
   <div class="form-group">
     <br />
     <div class="row">
+
       <div class="col-sm-11">
-        <!-- https://www.npmjs.com/package/vue-autosuggest -->
-        <vue-autosuggest
-          :suggestions="getExerciseSuggestions"
-          :input-props="{
-            id: 'autosuggest__input',
-            placeholder: 'Exercise Name',
-          }"
-          @selected="selectHandler"
-          v-model.trim="exerciseData.exerciseName"
-        >
-          <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
-          <template slot-scope="{ suggestion }">
-            <span class="my-suggestion-item">{{ suggestion.item }}</span>
-          </template>
-        </vue-autosuggest>
+        <label for="ExerciseName">ExerciseName: </label>
+        <input
+          v-model="exerciseData.exerciseName"
+          type="text"
+          class="form-control"
+        />
       </div>
+      
       <div class="col-sm-1">
         <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
       </div>
@@ -66,7 +59,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { VueAutosuggest } from "vue-autosuggest"; // ? Same problem with calendar component. When creating .d.ts file, it says there is no exported member
 // ! IF you havent added another set, you can not remove the exercise because the parent component does not recognize that this component exist
 
 export default Vue.extend({
@@ -81,9 +73,6 @@ export default Vue.extend({
     };
   },
   methods: {
-    selectHandler(event: any) {
-      if (event !== null) this.exerciseData.exerciseName = event.item;
-    },
     previewFiles(event: any, setIdx: number): void {
       if (this.exerciseData.sets[setIdx] !== undefined) {
         let video = event.target.files[0];
@@ -154,9 +143,6 @@ export default Vue.extend({
         },
       ];
     },
-  },
-  components: {
-    VueAutosuggest,
   },
 });
 </script>

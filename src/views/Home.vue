@@ -159,11 +159,11 @@ import {
   WorkingSet,
   Workout,
 } from "@/interfaces/workout.interface";
-import { ChartData, ChartPoint } from "chart.js";
-import { Moment } from "moment";
+import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
+// @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
 
 export default Vue.extend({

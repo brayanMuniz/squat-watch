@@ -154,6 +154,7 @@ export default Vue.extend({
             // Upload videos and get thier video url
             for (const setWithVideo in workout.exercises[exercise].videoData) {
               let setVideoData: VideoData =
+                // @ts-expect-error Do not want to repeat the if property exist again
                 workout.exercises[exercise].videoData[setWithVideo];
 
               // location in firebase storage as users/uid/workouts/exercises/exerciseName

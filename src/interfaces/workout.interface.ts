@@ -26,6 +26,9 @@ export interface ExerciseChartData {
   exerciseName: string;
   chartData: ChartData;
   setsWithDates: Array<ChartWorkingSet>;
+  videoReady: boolean;
+  videoUrl: string;
+  videoLoading: boolean
 }
 
 // Will have date
@@ -44,6 +47,12 @@ export interface Workout {
 export interface Exercise {
   exerciseName: string;
   sets: Array<WorkingSet>;
+  videoData?: Array<VideoData>;
+}
+
+export interface VideoData {
+  setVideoIdx: number;
+  video: any;
 }
 
 export interface WorkingSet {

@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     myUID: "",
     userData: {},
+    savedExerciseData: {},
     profilePictureUrl: "",
   },
   getters: {
@@ -19,6 +20,9 @@ export default new Vuex.Store({
     getMyProfilePicture: (state) => {
       return state.profilePictureUrl;
     },
+    getSavedExerciseData: (state) => {
+      return state.savedExerciseData;
+    },
   },
   mutations: {
     updateMyUID(state, newUID: string) {
@@ -29,6 +33,10 @@ export default new Vuex.Store({
     },
     upateMyProfilePicture(state, newProfilePicture: string) {
       state.profilePictureUrl = newProfilePicture;
+    },
+    // Todo: add on dont totally replace
+    updateSavedExerciseData(state, newExerciseData: any) {
+      state.savedExerciseData = newExerciseData;
     },
   },
   actions: {},

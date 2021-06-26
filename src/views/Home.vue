@@ -127,7 +127,9 @@
     </div>
 
     <!-- History of Workouts -->
-    <div class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5">
+    <div
+      class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5"
+    >
       <div
         class="col"
         v-for="(workout, workoutIdx) in allWorkouts"
@@ -228,6 +230,12 @@ export default Vue.extend({
           this.dataCollection = convertedData[0].chartData;
           this.allExerciseChartData = convertedData;
           this.dataReady = true;
+
+          this.$store.commit("updateSavedExerciseData", {
+            startDate: this.startDate,
+            endDate: this.endDate,
+            exerciseData: res,
+          });
         } else {
           this.noDataInThisDateRange = true;
         }
@@ -516,17 +524,6 @@ export default Vue.extend({
     },
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");
-    },
-  },
-  computed: {
-    getChartWorkingSets(): Array<ChartWorkingSet> {
-      let chartData: Array<ChartWorkingSet> = [];
-      console.log(this.currentlySelectedExercise);
-      this.allExerciseChartData.forEach((exerciseChartData) => {
-        if (exerciseChartData.exerciseName == this.currentlySelectedExercise)
-          chartData = exerciseChartData.setsWithDates;
-      });
-      return chartData;
     },
   },
   components: {

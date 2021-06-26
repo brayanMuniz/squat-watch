@@ -1,13 +1,13 @@
 <template>
   <form @submit.prevent="makeNewUser" class="container-fluid">
     <div class="row">
-      <div class="col">
+      <div class="col-sm-12 col-md-6">
         <div class="form-group">
           <label for="userName">User Name</label>
           <input type="text" class="form-control" v-model.trim="userName" />
         </div>
       </div>
-      <div class="col">
+      <div class="col-sm-12 col-md-6">
         <div class="form-group">
           <label for="Email">Email address</label>
           <input
@@ -19,7 +19,7 @@
           />
         </div>
       </div>
-      <div class="col">
+      <div class="col-sm-12 col-md-6">
         <div class="form-group">
           <label for="Password">Password</label>
           <input
@@ -30,7 +30,7 @@
           />
         </div>
       </div>
-      <div class="col">
+      <div class="col-sm-12 col-md-6">
         <label for="visibility">Visibility</label>
 
         <select

@@ -17,18 +17,17 @@
       >
     </select>
 
-      <div class="col-sm-11">
-        <label for="ExerciseName">ExerciseName: </label>
-        <input
-          v-model="exerciseData.exerciseName"
-          type="text"
-          class="form-control"
-        />
-      </div>
-      
-      <div class="col-sm-1">
-        <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
-      </div>
+    <div class="col-sm-11">
+      <label for="ExerciseName">ExerciseName: </label>
+      <input
+        v-model="exerciseData.exerciseName"
+        type="text"
+        class="form-control"
+      />
+    </div>
+
+    <div class="col-sm-1">
+      <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
     </div>
 
     <br />

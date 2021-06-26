@@ -1,9 +1,5 @@
 <template>
   <div class="form-group">
-    <!-- TODO: Have pre selected exercises that pop up(Squat, Bench, Deadlift) -->
-    <button @click="removeExercise" type="button">
-      -R Exercise
-    </button>
     <br />
 
     <label for="Exercise">Exercise Name: </label>
@@ -21,30 +17,56 @@
       >
     </select>
 
+    <div class="col-sm-11">
+      <label for="ExerciseName">ExerciseName: </label>
+      <input
+        v-model="exerciseData.exerciseName"
+        type="text"
+        class="form-control"
+      />
+    </div>
+
+    <div class="col-sm-1">
+      <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
+    </div>
+
     <br />
 
     <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div v-for="(set, index) in exerciseData.sets" :key="index">
-      <button @click="removeSet(index)" type="button">-R</button>
-      <label for="Exercise1">Weight </label>
-      <input v-model="set.weight" type="number" class="form-control" />
-      <label for="Exercise1">Reps </label>
-      <input v-model="set.reps" type="number" class="form-control" />
+      <div class="row">
+        <div class="col-sm-1">
+          <i class="bi bi-x-circle-fill" @click="removeSet(index)"></i>
+        </div>
+        <div class="col">
+          <label for="Exercise1">Weight </label>
+          <input v-model="set.weight" type="number" class="form-control" />
+        </div>
+        <div class="col">
+          <label for="Exercise1">Reps </label>
+          <input v-model="set.reps" type="number" class="form-control" />
+        </div>
+        <div class="col">
+          <!-- TODO: Add a file icon for adding files -->
+          <input
+            ref="myFiles"
+            name="file-upload"
+            @change="previewFiles($event, index)"
+            type="file"
+            class="form-control"
+            id="Profile Image"
+            multiple
+          />
+        </div>
+      </div>
 
       <br />
-
-      <input
-        ref="myFiles"
-        name="file-upload"
-        @change="previewFiles($event, index)"
-        type="file"
-        class="form-control"
-        id="Profile Image"
-        multiple
-      />
     </div>
-    <button @click="addNewSet" type="button">Add New Set</button>
+
+    <button @click="addNewSet" class="btn btn-info" type="button">
+      <i class="bi bi-plus-circle-fill"></i> Set
+    </button>
   </div>
 </template>
 
@@ -55,9 +77,6 @@ export default Vue.extend({
   name: "Exercise",
   data() {
     return {
-      videoUpload: new Blob(),
-      videoReady: false,
-      // Todo: make user fill out at least exerciseName and one set
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
@@ -66,9 +85,6 @@ export default Vue.extend({
     };
   },
   methods: {
-    selectHandler(event: any) {
-      if (event !== null) this.exerciseData.exerciseName = event.item;
-    },
     previewFiles(event: any, setIdx: number): void {
       if (this.exerciseData.sets[setIdx] !== undefined) {
         let video = event.target.files[0];

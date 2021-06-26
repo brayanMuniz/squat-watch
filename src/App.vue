@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div>
     <router-view />
   </div>
 </template>
@@ -51,4 +51,7 @@ export default Vue.extend({
 });
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+@import "~bootstrap-icons/font/bootstrap-icons.css";
+@import "~bootstrap/scss/bootstrap";
+</style>

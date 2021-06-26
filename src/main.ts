@@ -3,8 +3,9 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import firebaseApp from "firebase";
+import "bootstrap";
 
-Vue.config.productionTip = true;
+Vue.config.productionTip = false;
 
 let app: any = null;
 

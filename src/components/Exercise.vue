@@ -1,7 +1,21 @@
 <template>
   <div class="form-group">
     <br />
-    <div class="row">
+
+    <label for="Exercise">Exercise Name: </label>
+
+    <select
+      class="form-select"
+      aria-label="Default select example"
+      v-model="exerciseData.exerciseName"
+    >
+      <option
+        v-for="(exerciseName, idx) in getExerciseSuggestions"
+        :key="idx"
+        :value="exerciseName"
+        >{{ exerciseName }}</option
+      >
+    </select>
 
       <div class="col-sm-11">
         <label for="ExerciseName">ExerciseName: </label>
@@ -59,7 +73,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-// ! IF you havent added another set, you can not remove the exercise because the parent component does not recognize that this component exist
 
 export default Vue.extend({
   name: "Exercise",
@@ -137,11 +150,7 @@ export default Vue.extend({
   },
   computed: {
     getExerciseSuggestions() {
-      return [
-        {
-          data: this.$store.getters.getUserData.exercises,
-        },
-      ];
+      return this.$store.getters.getUserData.exercises;
     },
   },
 });

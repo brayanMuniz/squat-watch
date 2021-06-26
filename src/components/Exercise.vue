@@ -5,22 +5,21 @@
       -R Exercise
     </button>
     <br />
+
     <label for="Exercise">Exercise Name: </label>
-    <!-- https://www.npmjs.com/package/vue-autosuggest -->
-    <vue-autosuggest
-      :suggestions="getExerciseSuggestions"
-      :input-props="{
-        id: 'autosuggest__input',
-        placeholder: 'Exercise Name',
-      }"
-      @selected="selectHandler"
-      v-model.trim="exerciseData.exerciseName"
+
+    <select
+      class="form-select"
+      aria-label="Default select example"
+      v-model="exerciseData.exerciseName"
     >
-    <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
-      <template slot-scope="{ suggestion }">
-        <span class="my-suggestion-item">{{ suggestion.item }}</span>
-      </template>
-    </vue-autosuggest>
+      <option
+        v-for="(exerciseName, idx) in getExerciseSuggestions"
+        :key="idx"
+        :value="exerciseName"
+        >{{ exerciseName }}</option
+      >
+    </select>
 
     <br />
 
@@ -51,7 +50,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { VueAutosuggest } from "vue-autosuggest"; // ? Same problem with calendar component. When creating .d.ts file, it says there is no exported member
 
 export default Vue.extend({
   name: "Exercise",
@@ -135,15 +133,8 @@ export default Vue.extend({
   },
   computed: {
     getExerciseSuggestions() {
-      return [
-        {
-          data: this.$store.getters.getUserData.exercises,
-        },
-      ];
+      return this.$store.getters.getUserData.exercises;
     },
-  },
-  components: {
-    VueAutosuggest,
   },
 });
 </script>

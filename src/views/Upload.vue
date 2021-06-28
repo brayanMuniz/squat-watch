@@ -1,10 +1,9 @@
 <template>
   <div>
     <Navbar />
-    <!-- https://getbootstrap.com/docs/5.0/forms/validation/ -->
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-7">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="container-fluid">
           <form @submit.prevent="uploadWorkout">
             <div class="row">
               <div class="col">
@@ -34,8 +33,11 @@
             <!-- TODO: add a length of workout type to show how long workout was  -->
             <!--         Figure out what time type is valid on all browsers-->
 
-            <div v-for="exercise in amountOfExercises" :key="exercise">
+            <div v-for="exercise in amountOfExercises.amount" :key="exercise">
               <ExerciseComponent
+                :copiedExerciseData="
+                  amountOfExercises.copiedExerciseData[exercise - 1]
+                "
                 v-on:emitExerciseData="watchForData($event)"
                 v-on:removeExercise="removeExerciseComp($event)"
               />
@@ -65,8 +67,45 @@
             ></div>
           </div>
         </div>
+      </div>
 
-        <div class="col"><div>History Of Workouts Here</div></div>
+      <div class="col-md-4">
+        <div
+          class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
+        >
+          <div
+            class="col"
+            v-for="(workout, workoutIdx) in userPreviousWorkouts.exerciseData"
+            :key="workoutIdx"
+          >
+            <div class="card text-dark bg-light my-2">
+              <div class="card-body">
+                <h5 class="card-title">
+                  {{ workout.name }}
+                  <i
+                    @click="copyWorkoutToForm(workout)"
+                    class="bi bi-clipboard hoverable"
+                  ></i>
+                </h5>
+
+                <h6 class="card-subtitle mb-2 text-muted">
+                  {{ dateToMonthDay(workout.date) }}
+                </h6>
+
+                <p
+                  class="card-text my-0"
+                  v-for="(exercise, idx) in workout.exercises"
+                  :key="idx"
+                >
+                  {{ exercise.sets.length }} x
+                  {{ exercise.exerciseName }}
+                  | Best Set :
+                  {{ getBestSetAsString(exercise.sets) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -79,7 +118,12 @@
 import Vue from "vue";
 import ExerciseComponent from "@/components/Exercise.vue";
 import { firebaseApp } from "@/firebase";
-import { Exercise, VideoData, Workout } from "@/interfaces/workout.interface";
+import {
+  Exercise,
+  VideoData,
+  WorkingSet,
+  Workout,
+} from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
 import Navbar from "@/components/Navbar.vue";
@@ -89,7 +133,7 @@ export default Vue.extend({
     return {
       workoutName: "",
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
-      amountOfExercises: 1,
+      amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       exercises: Array<Exercise>(),
       uploading: false,
       poggersUpload: "0%",
@@ -226,9 +270,15 @@ export default Vue.extend({
           });
       }
     },
+    copyWorkoutToForm(workout: Workout) {
+      this.amountOfExercises.amount = 0;
+      this.amountOfExercises.copiedExerciseData = workout.exercises;
+      this.workoutName = workout.name;
+      this.amountOfExercises.amount = this.amountOfExercises.copiedExerciseData.length;
+    },
     // Component Data Sync ===================================
     addExercise() {
-      this.amountOfExercises++; // A new component will be rendered off of this and data will sync up automotically
+      this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
@@ -243,7 +293,7 @@ export default Vue.extend({
 
       if (exerciseIdx !== undefined) {
         this.exercises.splice(exerciseIdx, 1);
-        this.amountOfExercises--;
+        this.amountOfExercises.amount--;
       } else {
         console.error("Problem Removing Exercise.");
       }
@@ -261,6 +311,32 @@ export default Vue.extend({
         isLogged = true;
       return isLogged;
     },
+    calculateOneRepMax(weight: number, reps: number): number {
+      return Math.round(weight * (1 + reps / 30));
+    },
+    getBestSetAsString(sets: Array<WorkingSet>): string {
+      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
+      let bestSetCalculated: number = this.calculateOneRepMax(
+        sets[0].weight,
+        sets[0].reps
+      );
+
+      sets.forEach((set) => {
+        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+          bestSet = `${set.weight} x ${set.reps}`;
+          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
+        }
+      });
+      return bestSet;
+    },
+    dateToMonthDay(date: string): string {
+      return moment(date).format("MMM DD");
+    },
+  },
+  computed: {
+    userPreviousWorkouts() {
+      return this.$store.getters.getSavedExerciseData;
+    },
   },
   components: {
     ExerciseComponent,
@@ -268,3 +344,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style scoped>
+.hoverable {
+  cursor: pointer;
+}
+</style>

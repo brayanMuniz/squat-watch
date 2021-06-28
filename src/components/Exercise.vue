@@ -2,32 +2,28 @@
   <div class="form-group">
     <br />
 
-    <label for="Exercise">Exercise Name: </label>
+    <div class="row">
+      <div class="col-sm-1">
+        <i class="bi bi-x-circle-fill hoverable" @click="removeExercise"></i>
+      </div>
+      <div class="col-sm-11">
+        <label for="Exercise">Exercise Name: </label>
+        <input
+          class="form-control"
+          type="text"
+          list="exercises"
+          v-model="exerciseData.exerciseName"
+        />
 
-    <select
-      class="form-select"
-      aria-label="Default select example"
-      v-model="exerciseData.exerciseName"
-    >
-      <option
-        v-for="(exerciseName, idx) in getExerciseSuggestions"
-        :key="idx"
-        :value="exerciseName"
-        >{{ exerciseName }}</option
-      >
-    </select>
-
-    <div class="col-sm-11">
-      <label for="ExerciseName">ExerciseName: </label>
-      <input
-        v-model="exerciseData.exerciseName"
-        type="text"
-        class="form-control"
-      />
-    </div>
-
-    <div class="col-sm-1">
-      <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
+        <datalist id="exercises">
+          <option
+            v-for="(exerciseName, idx) in getExerciseSuggestions"
+            :key="idx"
+            :value="exerciseName"
+            >{{ exerciseName }}</option
+          >
+        </datalist>
+      </div>
     </div>
 
     <br />
@@ -37,7 +33,10 @@
     <div v-for="(set, index) in exerciseData.sets" :key="index">
       <div class="row">
         <div class="col-sm-1">
-          <i class="bi bi-x-circle-fill" @click="removeSet(index)"></i>
+          <i
+            class="bi bi-x-circle-fill hoverable"
+            @click="removeSet(index)"
+          ></i>
         </div>
         <div class="col">
           <label for="Exercise1">Weight </label>
@@ -71,10 +70,16 @@
 </template>
 
 <script lang="ts">
+import { Exercise } from "@/interfaces/workout.interface";
 import Vue from "vue";
 
 export default Vue.extend({
   name: "Exercise",
+  props: {
+    copiedExerciseData: {
+      type: Object as () => Exercise,
+    },
+  },
   data() {
     return {
       exerciseData: {
@@ -83,6 +88,21 @@ export default Vue.extend({
         videoData: Array<any>(), // Todo: update this
       },
     };
+  },
+  created() {
+    if (this.copiedExerciseData) {
+      console.log(this.copiedExerciseData);
+      this.exerciseData.exerciseName = this.copiedExerciseData.exerciseName;
+      this.exerciseData.sets = [];
+      this.copiedExerciseData.sets.forEach((set) => {
+        this.exerciseData.sets.push({
+          weight: set.weight,
+          reps: set.reps,
+          videoUrl: "",
+        });
+      });
+    }
+    this.$emit("emitExerciseData", this.exerciseData);
   },
   methods: {
     previewFiles(event: any, setIdx: number): void {
@@ -154,3 +174,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style scoped>
+.hoverable {
+  cursor: pointer;
+}
+</style>

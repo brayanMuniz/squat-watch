@@ -219,31 +219,33 @@ export default Vue.extend({
     };
   },
   async created() {
-    await this.retriveWorkoutData(this.startDate, this.endDate)
-      .then((res) => {
-        this.allWorkouts = res;
-        let convertedData:
-          | Array<ExerciseChartData>
-          | undefined = this.covertWorkoutDataToChartData(res);
-        if (convertedData.length > 0) {
-          this.currentlySelectedExercise = convertedData[0].exerciseName;
-          this.dataCollection = convertedData[0].chartData;
-          this.allExerciseChartData = convertedData;
-          this.dataReady = true;
+    if (this.$store.getters.getMyUID !== "")
+      await this.retriveWorkoutData(this.startDate, this.endDate)
+        .then((res) => {
+          this.allWorkouts = res;
+          let convertedData:
+            | Array<ExerciseChartData>
+            | undefined = this.covertWorkoutDataToChartData(res);
+          if (convertedData.length > 0) {
+            this.currentlySelectedExercise = convertedData[0].exerciseName;
+            this.dataCollection = convertedData[0].chartData;
+            this.allExerciseChartData = convertedData;
+            this.dataReady = true;
 
-          this.$store.commit("updateSavedExerciseData", {
-            startDate: this.startDate,
-            endDate: this.endDate,
-            exerciseData: res,
-          });
-        } else {
-          this.noDataInThisDateRange = true;
-        }
-      })
-      .catch((err) => {
-        this.dataReady = false;
-        console.error(err);
-      });
+            this.$store.commit("updateSavedExerciseData", {
+              startDate: this.startDate,
+              endDate: this.endDate,
+              exerciseData: res,
+            });
+          } else {
+            this.noDataInThisDateRange = true;
+          }
+        })
+        .catch((err) => {
+          this.dataReady = false;
+          console.error(err);
+        });
+    else this.$router.push("/createAccount");
   },
   methods: {
     async getDateRange(event: any) {

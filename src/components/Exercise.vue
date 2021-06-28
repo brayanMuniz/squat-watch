@@ -8,19 +8,21 @@
       </div>
       <div class="col-sm-11">
         <label for="Exercise">Exercise Name: </label>
-
-        <select
-          class="form-select"
-          aria-label="Default select example"
+        <input
+          class="form-control"
+          type="text"
+          list="exercises"
           v-model="exerciseData.exerciseName"
-        >
+        />
+
+        <datalist id="exercises">
           <option
             v-for="(exerciseName, idx) in getExerciseSuggestions"
             :key="idx"
             :value="exerciseName"
             >{{ exerciseName }}</option
           >
-        </select>
+        </datalist>
       </div>
     </div>
 

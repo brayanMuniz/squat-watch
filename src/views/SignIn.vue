@@ -47,6 +47,7 @@ export default Vue.extend({
         .auth()
         .signInWithEmailAndPassword(this.email, this.password)
         .then((res) => {
+          this.$router.push("/");
           console.log(res);
         })
         .catch((err) => {

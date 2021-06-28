@@ -16,9 +16,8 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <!-- TODO: make contents go on right side -->
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item" v-if="userSignedIn">
             <router-link class="nav-link active" to="/upload"
               >Add Workout</router-link
@@ -30,7 +29,13 @@
           </li>
 
           <li class="nav-item" v-if="userSignedIn">
-            <router-link @click="signOut" class="nav-link" to="/"
+            <router-link class="nav-link active" to="/browse"
+              >Browse</router-link
+            >
+          </li>
+
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link @click="signOut" class="nav-link active" to="/"
               >Sign Out</router-link
             >
           </li>
@@ -39,10 +44,11 @@
           <li class="nav-item" v-if="userSignedIn">
             <router-link class="navbar-brand" to="/profile"
               ><img
+                class="img-fluid"
                 v-if="userHasProfileImage && userSignedIn"
                 :src="profileImage"
-                width="60px"
-                height="60px"
+                width="45px"
+                height="45px"
             /></router-link>
           </li>
         </ul>

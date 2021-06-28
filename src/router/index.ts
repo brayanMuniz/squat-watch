@@ -4,6 +4,7 @@ import Home from "../views/Home.vue";
 import Upload from "../views/Upload.vue";
 import CreateAccount from "@/views/CreateAccount.vue";
 import SignIn from "@/views/SignIn.vue";
+import Browse from "@/views/Browse.vue";
 
 Vue.use(VueRouter);
 
@@ -27,6 +28,11 @@ const routes: Array<RouteConfig> = [
     path: "/signIn",
     name: "Sign In",
     component: SignIn,
+  },
+  {
+    path: "/browse",
+    name: "Browse",
+    component: Browse,
   },
 ];
 

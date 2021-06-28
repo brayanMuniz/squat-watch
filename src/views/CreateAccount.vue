@@ -1,132 +1,154 @@
 <template>
-  <form @submit.prevent="makeNewUser" class="container-fluid">
-    <div class="row">
-      <div class="col-sm-12 col-md-6">
-        <div class="form-group">
-          <label for="userName">User Name</label>
-          <input type="text" class="form-control" v-model.trim="userName" />
+  <div>
+    <Navbar />
+    <form @submit.prevent="makeNewUser" class="container-fluid">
+      <div class="row">
+        <div class="col-sm-12 col-md-6">
+          <div class="form-group">
+            <label for="userName">User Name</label>
+            <input type="text" class="form-control" v-model.trim="userName" />
+          </div>
         </div>
-      </div>
-      <div class="col-sm-12 col-md-6">
-        <div class="form-group">
-          <label for="Email">Email address</label>
-          <input
-            type="email"
-            class="form-control"
-            id="Email"
-            aria-describedby="emailHelp"
-            v-model.trim="email"
-          />
+        <div class="col-sm-12 col-md-6">
+          <div class="form-group">
+            <label for="Email">Email address</label>
+            <input
+              type="email"
+              class="form-control"
+              id="Email"
+              aria-describedby="emailHelp"
+              v-model.trim="email"
+            />
+          </div>
         </div>
-      </div>
-      <div class="col-sm-12 col-md-6">
-        <div class="form-group">
-          <label for="Password">Password</label>
-          <input
-            v-model.trim="password"
-            type="password"
-            class="form-control"
-            id="Password"
-          />
+        <div class="col-sm-12 col-md-6">
+          <div class="form-group">
+            <label for="Password">Password</label>
+            <input
+              v-model.trim="password"
+              type="password"
+              class="form-control"
+              id="Password"
+            />
+          </div>
         </div>
-      </div>
-      <div class="col-sm-12 col-md-6">
-        <label for="visibility">Visibility</label>
+        <div class="col-sm-12 col-md-6">
+          <label for="visibility">Visibility</label>
 
-        <select
-          class="form-select"
-          aria-label="Default select example"
-          v-model="visibility"
-        >
-          <option value="Public">Public</option>
-          <option value="Friends Only">Friends Only</option>
-          <option value="Private">Private</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-3">
-        <label>Current Age </label>
-        <input v-model="age" type="number" class="form-control" />
-      </div>
-      <div class="col-3">
-        <label>Current Weight </label>
-        <input v-model="weight" type="number" class="form-control" />
-      </div>
-      <div class="col-6">
-        <label for="description" class="form-label"
-          >Describe Yourself For Others to See</label
-        >
-        <textarea
-          class="form-control"
-          id="exampleFormControlTextarea1"
-          rows="3"
-          v-model.trim="description"
-        ></textarea>
-      </div>
-    </div>
-
-    <!--Initial Lifts  -->
-    <div>Current Poggers</div>
-    <div
-      class="form-group"
-      v-for="(exercise, index) in initialLiftsData"
-      :key="index"
-    >
-      <div class="row mb-3">
-        <!-- TODO: make this bigger -->
-        <div class="col-1">
-          <i
-            class="bi bi-x-circle-fill hoverable"
-            @click="removeLift(index)"
-          ></i>
+          <select
+            class="form-select"
+            aria-label="Default select example"
+            v-model="visibility"
+          >
+            <option value="Public">Public</option>
+            <option value="Friends Only">Friends Only</option>
+            <option value="Private">Private</option>
+          </select>
         </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6">
+          <label>Current Age </label>
+          <input v-model="age" type="number" class="form-control" />
+        </div>
+        <div class="col-6">
+          <label>Current Weight </label>
+          <input v-model="weight" type="number" class="form-control" />
+        </div>
+      </div>
+
+      <div class="row">
         <div class="col">
-          <label>Exercise Name</label>
-          <input v-model="exercise.name" class="form-control" type="text" />
-        </div>
-        <div class="col">
-          <label>Weight </label>
-          <input v-model="exercise.weight" type="number" class="form-control" />
-        </div>
-        <div class="col">
-          <label>Reps </label>
-          <input v-model="exercise.reps" type="number" class="form-control" />
-        </div>
-      </div>
-
-      <!-- Todo: Add a dropdown of suggested lifts, Squat, Bench, Deadlift etx  -->
-    </div>
-    <button @click="addNewExercise" class="btn btn-info" type="button">
-      Add New Exercise
-    </button>
-
-    <div class="row">
-      <div class="col">
-        <div class="form-group">
-          <label for="Starting Amount">Profile Picture :</label>
-          <input
-            ref="upload"
-            name="file-upload"
-            @change="previewFiles"
-            type="file"
+          <label for="description" class="form-label">Describe Yourself</label>
+          <textarea
             class="form-control"
-            id="Profile Image"
-          />
+            id="exampleFormControlTextarea1"
+            rows="3"
+            v-model.trim="description"
+          ></textarea>
         </div>
       </div>
-      <div class="col-3">
-        <button type="submit" class="btn btn-primary">Submit</button>
+
+      <!--Initial Lifts  -->
+      <div>Current Poggers</div>
+      <div
+        class="form-group"
+        v-for="(exercise, index) in initialLiftsData"
+        :key="index"
+      >
+        <div class="row mb-3">
+          <!-- TODO: make this bigger -->
+          <div class="col-1">
+            <i
+              class="bi bi-x-circle-fill hoverable"
+              @click="removeLift(index)"
+            ></i>
+          </div>
+          <div class="col">
+            <label>Exercise Name</label>
+            <input type="text" list="exercises" v-model="exercise.name" />
+            <datalist id="exercises">
+              <option>Squat</option>
+              <option>Bench Press (Barbell)</option>
+              <option>Deadlift</option>
+              <option>Overhead Press (Barbell)</option>
+            </datalist>
+          </div>
+          <div class="col">
+            <label>Weight </label>
+            <input
+              v-model="exercise.weight"
+              type="number"
+              class="form-control"
+            />
+          </div>
+          <div class="col">
+            <label>Reps </label>
+            <input v-model="exercise.reps" type="number" class="form-control" />
+          </div>
+        </div>
+
+        <!-- Todo: Add a dropdown of suggested lifts, Squat, Bench, Deadlift etx  -->
       </div>
-    </div>
-  </form>
+      <button @click="addNewExercise" class="btn btn-info" type="button">
+        Add New Exercise
+      </button>
+
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="Starting Amount">Profile Picture :</label>
+            <input
+              ref="upload"
+              name="file-upload"
+              @change="previewFiles"
+              type="file"
+              class="form-control"
+              id="Profile Image"
+            />
+            <img
+              class="img-fluid"
+              v-if="userWantsProfileImage"
+              :src="profileImagePreview"
+              alt="usersProfileImage"
+            />
+          </div>
+        </div>
+        <div class="col-3">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </template>
 
 <script lang="ts">
+// https://stackoverflow.com/questions/12368910/html-display-image-after-selecting-filename
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
+import Navbar from "@/components/Navbar.vue";
 
 export default Vue.extend({
   data() {
@@ -139,8 +161,9 @@ export default Vue.extend({
       description: "",
       visibility: "Public",
       profileImageUrl: "",
-      initialLiftsData: [{ name: "Squat", weight: 0, reps: 5 }], // Todo: make sure every exercise is unique
+      initialLiftsData: [{ name: "", weight: 0, reps: 0 }], // Todo: make sure every exercise is unique
       profileImage: new Blob(),
+      profileImagePreview: "",
       userWantsProfileImage: false,
     };
   },
@@ -276,11 +299,16 @@ export default Vue.extend({
     previewFiles(event: any): void {
       if (event.target.files[0]) {
         this.profileImage = event.target.files[0];
+        this.profileImagePreview = URL.createObjectURL(event.target.files[0]);
         this.userWantsProfileImage = true;
       } else {
         this.userWantsProfileImage = false;
+        this.profileImagePreview = "";
       }
     },
+  },
+  components: {
+    Navbar,
   },
 });
 </script>

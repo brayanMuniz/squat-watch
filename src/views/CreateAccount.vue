@@ -297,7 +297,7 @@ export default Vue.extend({
       if (this.initialLiftsData.length > 10) {
         alert("No more than 10");
       } else {
-        this.initialLiftsData.push({ name: "", weight: 0, reps: 0 });
+        this.initialLiftsData.push({ name: "", weight: "", reps: "" });
       }
     },
     removeLift(idx: number) {

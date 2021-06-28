@@ -53,7 +53,7 @@
           <input v-model="age" type="number" class="form-control" />
         </div>
         <div class="col-6">
-          <label class="form-label">Current Weight </label>
+          <label class="form-label">Current Weight (LBS)</label>
           <input v-model="weight" type="number" class="form-control" />
         </div>
       </div>
@@ -78,15 +78,14 @@
         :key="index"
       >
         <div class="row mb-3">
-          <!-- TODO: make this bigger -->
-          <div class="col-1">
-            <i
-              class="bi bi-x-circle-fill hoverable"
-              @click="removeLift(index)"
-            ></i>
-          </div>
-          <div class="col">
-            <label class="form-label">Exercise Name</label>
+          <div class="col-sm-8">
+            <label class="form-label">
+              <i
+                class="bi bi-x-circle-fill hoverable"
+                @click="removeLift(index)"
+              ></i>
+              Exercise Name</label
+            >
             <input
               class="form-control"
               type="text"
@@ -100,17 +99,25 @@
               <option>Overhead Press (Barbell)</option>
             </datalist>
           </div>
-          <div class="col-2">
-            <label class="form-label">Weight</label>
-            <input
-              v-model="exercise.weight"
-              type="number"
-              class="form-control"
-            />
-          </div>
-          <div class="col-2">
-            <label class="form-label">Reps </label>
-            <input v-model="exercise.reps" type="number" class="form-control" />
+
+          <div class="col-sm-4 row">
+            <div class="col">
+              <label class="form-label">Weight</label>
+              <input
+                v-model="exercise.weight"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col">
+              <label class="form-label">Reps </label>
+              <input
+                v-model="exercise.reps"
+                type="number"
+                class="form-control"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -158,12 +165,12 @@ export default Vue.extend({
       userName: "",
       email: "",
       password: "",
-      age: 0,
-      weight: 0,
+      age: "",
+      weight: "",
       description: "",
       visibility: "Public",
       profileImageUrl: "",
-      initialLiftsData: [{ name: "", weight: 0, reps: 0 }], // Todo: make sure every exercise is unique
+      initialLiftsData: [{ name: "", weight: "", reps: "" }], // Todo: make sure every exercise is unique
       profileImage: new Blob(),
       profileImagePreview: "",
       userWantsProfileImage: false,

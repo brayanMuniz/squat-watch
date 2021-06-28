@@ -79,7 +79,7 @@ export default Vue.extend({
   computed: {
     userSignedIn() {
       return (
-        store.getters.getMyUID !== undefined || store.getters.getMyUID !== ""
+        store.getters.getMyUID !== undefined && store.getters.getMyUID !== ""
       );
     },
     userHasProfileImage() {

@@ -46,16 +46,21 @@
           <label for="Exercise1">Reps </label>
           <input v-model="set.reps" type="number" class="form-control" />
         </div>
-        <div class="col">
-          <!-- TODO: Add a file icon for adding files -->
+        <div class="col image-upload">
+          <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">
+            <i class="bi bi-file-check-fill hoverable"></i>
+          </label>
+          <label :for="returnUniqueId(index)" v-else>
+            <i class="bi bi-file-arrow-up-fill hoverable"></i>
+          </label>
+
           <input
+            :id="returnUniqueId(index)"
             ref="myFiles"
             name="file-upload"
             @change="previewFiles($event, index)"
             type="file"
             class="form-control"
-            id="Profile Image"
-            multiple
           />
         </div>
       </div>
@@ -87,6 +92,11 @@ export default Vue.extend({
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
         videoData: Array<any>(), // Todo: update this
       },
+      exerciseId:
+        "_" +
+        Math.random()
+          .toString(36)
+          .substr(2, 9),
     };
   },
   created() {
@@ -124,6 +134,18 @@ export default Vue.extend({
           });
       }
     },
+    doesSetContainVideo(setIdx: number): boolean {
+      let itDoes = false;
+      if (this.exerciseData.sets[setIdx]) {
+        this.exerciseData.videoData.forEach((vidData) => {
+          if (vidData.setVideoIdx === setIdx) itDoes = true;
+        });
+      }
+      return itDoes;
+    },
+    returnUniqueId(setVideoIdx: number) {
+      return `${this.exerciseId}Set:${setVideoIdx}`;
+    },
     addNewSet() {
       let setsLength: number = this.exerciseData.sets.length;
       if (setsLength > 0) {
@@ -147,18 +169,17 @@ export default Vue.extend({
       }
       // remove video data from this.exerciseData
       let videoDataSetIdx = -1;
-      this.exerciseData.videoData.forEach((vidData) => {
-        if (vidData.setVideoIdx == setIdx) {
-          videoDataSetIdx = setIdx;
+      this.exerciseData.videoData.forEach((vidData, vidIdx) => {
+        if (vidData.setVideoIdx === setIdx) {
+          videoDataSetIdx = vidIdx;
         }
       });
 
       if (videoDataSetIdx !== -1) {
-        this.exerciseData.videoData.splice(setIdx, 1);
+        this.exerciseData.videoData.splice(videoDataSetIdx, 1);
       }
     },
   },
-  // ? Might be able to add another watcher for videoUpload and have it emited to the parent with object {setLocation, videoUrl}
   watch: {
     exerciseData: {
       deep: true,
@@ -178,5 +199,9 @@ export default Vue.extend({
 <style scoped>
 .hoverable {
   cursor: pointer;
+}
+
+.image-upload > input {
+  display: none;
 }
 </style>

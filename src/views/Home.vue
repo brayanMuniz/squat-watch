@@ -247,12 +247,6 @@ export default Vue.extend({
           endDate: this.endDate,
           exerciseData: exerciseData,
         });
-
-        this.$store.commit("updateSavedExerciseData", {
-          startDate: "",
-          endDate: "07/1/2021",
-          exerciseData: [],
-        });
       } else {
         this.noDataInThisDateRange = true;
       }

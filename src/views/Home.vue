@@ -217,35 +217,59 @@ export default Vue.extend({
     };
   },
   async created() {
-    if (this.$store.getters.getMyUID !== "")
-      await this.retriveWorkoutData(this.startDate, this.endDate)
-        .then((res) => {
-          this.allWorkouts = res;
-          let convertedData:
-            | Array<ExerciseChartData>
-            | undefined = this.covertWorkoutDataToChartData(res);
-          if (convertedData.length > 0) {
-            this.currentlySelectedExercise = convertedData[0].exerciseName;
-            this.dataCollection = convertedData[0].chartData;
-            this.allExerciseChartData = convertedData;
-            this.dataReady = true;
+    if (this.$store.getters.getMyUID !== "") {
+      let exerciseData = [];
+      if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
+        exerciseData = this.$store.getters.getSavedExerciseData.exerciseData;
+      } else {
+        await this.retriveWorkoutData(this.startDate, this.endDate)
+          .then((res) => {
+            exerciseData = res;
+          })
+          .catch((err) => {
+            this.dataReady = false;
+            console.error(err);
+          });
+      }
 
-            this.$store.commit("updateSavedExerciseData", {
-              startDate: this.startDate,
-              endDate: this.endDate,
-              exerciseData: res,
-            });
-          } else {
-            this.noDataInThisDateRange = true;
-          }
-        })
-        .catch((err) => {
-          this.dataReady = false;
-          console.error(err);
+      this.allWorkouts = exerciseData;
+      let convertedData:
+        | Array<ExerciseChartData>
+        | undefined = this.covertWorkoutDataToChartData(exerciseData);
+      if (convertedData.length > 0) {
+        this.currentlySelectedExercise = convertedData[0].exerciseName;
+        this.dataCollection = convertedData[0].chartData;
+        this.allExerciseChartData = convertedData;
+        this.dataReady = true;
+
+        this.$store.commit("updateSavedExerciseData", {
+          startDate: this.startDate,
+          endDate: this.endDate,
+          exerciseData: exerciseData,
         });
-    else this.$router.push("/createAccount");
+
+        this.$store.commit("updateSavedExerciseData", {
+          startDate: "",
+          endDate: "07/1/2021",
+          exerciseData: [],
+        });
+      } else {
+        this.noDataInThisDateRange = true;
+      }
+    } else this.$router.push("/createAccount");
   },
   methods: {
+    getMissingDates(startDate: string, endDate: string): Array<string> {
+      let wantedDates: Array<string> = this.generateArrayOfDates(
+        startDate,
+        endDate
+      );
+      let currentDates: Array<string> = this.generateArrayOfDates(
+        this.$store.getters.getSavedExerciseData.startDate,
+        this.$store.getters.getSavedExerciseData.endDate
+      );
+      return wantedDates.filter((date) => !currentDates.includes(date));
+    },
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {

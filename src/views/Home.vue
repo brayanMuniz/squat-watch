@@ -52,7 +52,7 @@
       >
         <div class="row">
           <div class="col-lg-5">
-            <div v-if="dataReady">
+            <div v-if="dataReady" class="container-fluid">
               <!-- :options prop needs to be passed in or there will be an error -->
               <LineChart
                 :chartData="exercise.chartData"
@@ -65,13 +65,13 @@
           </div>
           <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
           <div class="col-lg-4">
-            <table class="table">
+            <table class="table container-fluid">
               <thead>
                 <tr>
                   <th scope="col">Date</th>
                   <th>1 Rep Max</th>
                   <th scope="col">Best Set</th>
-                  <th scope="col">Amount Of Sets</th>
+                  <th scope="col"># Of Sets</th>
                   <th scope="col">Video</th>
                 </tr>
               </thead>
@@ -98,8 +98,8 @@
             </table>
           </div>
 
-          <div class="col-lg-3">
-            <div v-if="exercise.videoReady">
+          <div v-if="exercise.videoReady" class="col-lg-3">
+            <div v-if="exercise.videoReady" class="container-fluid">
               <video
                 ref="videoPlayer"
                 width="320"
@@ -120,7 +120,7 @@
               <span class="visually-hidden">Loading...</span>
             </div>
 
-            <div v-else>No Video</div>
+            <div v-else></div>
           </div>
         </div>
       </div>
@@ -158,8 +158,6 @@
     </div>
 
     <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
-
-    <div>Stats</div>
   </div>
 </template>
 
@@ -461,6 +459,7 @@ export default Vue.extend({
     // Chart Methods
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
+        // Figureout which exercise clicked from this.allExerciseChartData
         let exerciseIdx = -1;
         this.allExerciseChartData.forEach((exercise, idx) => {
           if (exercise.exerciseName == videoData.exerciseName) {
@@ -476,6 +475,7 @@ export default Vue.extend({
           this.allExerciseChartData[exerciseIdx].videoReady = false;
           this.allExerciseChartData[exerciseIdx].videoLoading = true;
 
+          // This allows multiple videos to be played from one video player
           setTimeout(() => {
             this.allExerciseChartData[exerciseIdx].videoUrl =
               videoData.videoUrl;

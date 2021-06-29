@@ -4,7 +4,11 @@
 
     <div class="row">
       <div class="col-sm-1">
-        <i class="bi bi-x-circle-fill hoverable" @click="removeExercise"></i>
+        <i
+          class="bi bi-x-circle-fill hoverable"
+          style="font-size: 1.3rem;"
+          @click="removeExercise"
+        ></i>
       </div>
       <div class="col-sm-11">
         <label for="Exercise">Exercise Name: </label>
@@ -35,6 +39,7 @@
         <div class="col-sm-1">
           <i
             class="bi bi-x-circle-fill hoverable"
+            style="font-size: 1.3rem;"
             @click="removeSet(index)"
           ></i>
         </div>
@@ -48,10 +53,16 @@
         </div>
         <div class="col image-upload">
           <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">
-            <i class="bi bi-file-check-fill hoverable"></i>
+            <i
+              class="bi bi-file-check-fill text-success hoverable custom-icon-fontsize"
+            ></i>
           </label>
+
           <label :for="returnUniqueId(index)" v-else>
-            <i class="bi bi-file-arrow-up-fill hoverable"></i>
+            <i
+              class="bi bi-file-arrow-up-fill hoverable custom-icon-fontsize my-auto"
+              style="color: cornflowerblue;"
+            ></i>
           </label>
 
           <input
@@ -199,6 +210,10 @@ export default Vue.extend({
 <style scoped>
 .hoverable {
   cursor: pointer;
+}
+
+.custom-icon-fontsize {
+  font-size: 2rem;
 }
 
 .image-upload > input {

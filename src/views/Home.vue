@@ -127,7 +127,9 @@
     </div>
 
     <!-- History of Workouts -->
-    <div class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5">
+    <div
+      class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5"
+    >
       <div
         class="col"
         v-for="(workout, workoutIdx) in allWorkouts"
@@ -171,11 +173,11 @@ import {
   WorkingSet,
   Workout,
 } from "@/interfaces/workout.interface";
-import { ChartData, ChartPoint } from "chart.js";
-import { Moment } from "moment";
+import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
+// @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
 
 export default Vue.extend({
@@ -217,25 +219,33 @@ export default Vue.extend({
     };
   },
   async created() {
-    await this.retriveWorkoutData(this.startDate, this.endDate)
-      .then((res) => {
-        this.allWorkouts = res;
-        let convertedData:
-          | Array<ExerciseChartData>
-          | undefined = this.covertWorkoutDataToChartData(res);
-        if (convertedData.length > 0) {
-          this.currentlySelectedExercise = convertedData[0].exerciseName;
-          this.dataCollection = convertedData[0].chartData;
-          this.allExerciseChartData = convertedData;
-          this.dataReady = true;
-        } else {
-          this.noDataInThisDateRange = true;
-        }
-      })
-      .catch((err) => {
-        this.dataReady = false;
-        console.error(err);
-      });
+    if (this.$store.getters.getMyUID !== "")
+      await this.retriveWorkoutData(this.startDate, this.endDate)
+        .then((res) => {
+          this.allWorkouts = res;
+          let convertedData:
+            | Array<ExerciseChartData>
+            | undefined = this.covertWorkoutDataToChartData(res);
+          if (convertedData.length > 0) {
+            this.currentlySelectedExercise = convertedData[0].exerciseName;
+            this.dataCollection = convertedData[0].chartData;
+            this.allExerciseChartData = convertedData;
+            this.dataReady = true;
+
+            this.$store.commit("updateSavedExerciseData", {
+              startDate: this.startDate,
+              endDate: this.endDate,
+              exerciseData: res,
+            });
+          } else {
+            this.noDataInThisDateRange = true;
+          }
+        })
+        .catch((err) => {
+          this.dataReady = false;
+          console.error(err);
+        });
+    else this.$router.push("/createAccount");
   },
   methods: {
     async getDateRange(event: any) {
@@ -516,17 +526,6 @@ export default Vue.extend({
     },
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");
-    },
-  },
-  computed: {
-    getChartWorkingSets(): Array<ChartWorkingSet> {
-      let chartData: Array<ChartWorkingSet> = [];
-      console.log(this.currentlySelectedExercise);
-      this.allExerciseChartData.forEach((exerciseChartData) => {
-        if (exerciseChartData.exerciseName == this.currentlySelectedExercise)
-          chartData = exerciseChartData.setsWithDates;
-      });
-      return chartData;
     },
   },
   components: {

@@ -5,13 +5,13 @@
       <div class="row">
         <div class="col-sm-12 col-md-6">
           <div class="form-group">
-            <label for="userName">User Name</label>
+            <label class="form-label" for="userName">User Name</label>
             <input type="text" class="form-control" v-model.trim="userName" />
           </div>
         </div>
         <div class="col-sm-12 col-md-6">
           <div class="form-group">
-            <label for="Email">Email address</label>
+            <label class="form-label" for="Email">Email address</label>
             <input
               type="email"
               class="form-control"
@@ -23,7 +23,7 @@
         </div>
         <div class="col-sm-12 col-md-6">
           <div class="form-group">
-            <label for="Password">Password</label>
+            <label class="form-label" for="Password">Password</label>
             <input
               v-model.trim="password"
               type="password"
@@ -33,7 +33,7 @@
           </div>
         </div>
         <div class="col-sm-12 col-md-6">
-          <label for="visibility">Visibility</label>
+          <label class="form-label" for="visibility">Visibility</label>
 
           <select
             class="form-select"
@@ -49,11 +49,11 @@
 
       <div class="row">
         <div class="col-6">
-          <label>Current Age </label>
+          <label class="form-label">Current Age </label>
           <input v-model="age" type="number" class="form-control" />
         </div>
         <div class="col-6">
-          <label>Current Weight </label>
+          <label class="form-label">Current Weight (LBS)</label>
           <input v-model="weight" type="number" class="form-control" />
         </div>
       </div>
@@ -71,23 +71,27 @@
       </div>
 
       <!--Initial Lifts  -->
-      <div>Current Poggers</div>
+      <div class="form-label">Current Poggers</div>
       <div
         class="form-group"
         v-for="(exercise, index) in initialLiftsData"
         :key="index"
       >
         <div class="row mb-3">
-          <!-- TODO: make this bigger -->
-          <div class="col-1">
-            <i
-              class="bi bi-x-circle-fill hoverable"
-              @click="removeLift(index)"
-            ></i>
-          </div>
-          <div class="col">
-            <label>Exercise Name</label>
-            <input type="text" list="exercises" v-model="exercise.name" />
+          <div class="col-sm-8">
+            <label class="form-label">
+              <i
+                class="bi bi-x-circle-fill hoverable"
+                @click="removeLift(index)"
+              ></i>
+              Exercise Name</label
+            >
+            <input
+              class="form-control"
+              type="text"
+              list="exercises"
+              v-model="exercise.name"
+            />
             <datalist id="exercises">
               <option>Squat</option>
               <option>Bench Press (Barbell)</option>
@@ -95,21 +99,27 @@
               <option>Overhead Press (Barbell)</option>
             </datalist>
           </div>
-          <div class="col">
-            <label>Weight </label>
-            <input
-              v-model="exercise.weight"
-              type="number"
-              class="form-control"
-            />
-          </div>
-          <div class="col">
-            <label>Reps </label>
-            <input v-model="exercise.reps" type="number" class="form-control" />
+
+          <div class="col-sm-4 row">
+            <div class="col">
+              <label class="form-label">Weight</label>
+              <input
+                v-model="exercise.weight"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col">
+              <label class="form-label">Reps </label>
+              <input
+                v-model="exercise.reps"
+                type="number"
+                class="form-control"
+              />
+            </div>
           </div>
         </div>
-
-        <!-- Todo: Add a dropdown of suggested lifts, Squat, Bench, Deadlift etx  -->
       </div>
       <button @click="addNewExercise" class="btn btn-info" type="button">
         Add New Exercise
@@ -144,7 +154,6 @@
 </template>
 
 <script lang="ts">
-// https://stackoverflow.com/questions/12368910/html-display-image-after-selecting-filename
 import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
@@ -153,15 +162,15 @@ import Navbar from "@/components/Navbar.vue";
 export default Vue.extend({
   data() {
     return {
-      userName: "", // Todo: make sure userName is not taken
+      userName: "",
       email: "",
       password: "",
-      age: 0,
-      weight: 0,
+      age: "",
+      weight: "",
       description: "",
       visibility: "Public",
       profileImageUrl: "",
-      initialLiftsData: [{ name: "", weight: 0, reps: 0 }], // Todo: make sure every exercise is unique
+      initialLiftsData: [{ name: "", weight: "", reps: "" }], // Todo: make sure every exercise is unique
       profileImage: new Blob(),
       profileImagePreview: "",
       userWantsProfileImage: false,
@@ -288,7 +297,7 @@ export default Vue.extend({
       if (this.initialLiftsData.length > 10) {
         alert("No more than 10");
       } else {
-        this.initialLiftsData.push({ name: "", weight: 0, reps: 0 });
+        this.initialLiftsData.push({ name: "", weight: "", reps: "" });
       }
     },
     removeLift(idx: number) {

@@ -1,26 +1,28 @@
 <template>
   <div class="form-group">
     <br />
+
     <div class="row">
-      <div class="col-sm-11">
-        <!-- https://www.npmjs.com/package/vue-autosuggest -->
-        <vue-autosuggest
-          :suggestions="getExerciseSuggestions"
-          :input-props="{
-            id: 'autosuggest__input',
-            placeholder: 'Exercise Name',
-          }"
-          @selected="selectHandler"
-          v-model.trim="exerciseData.exerciseName"
-        >
-          <!-- TODO: dont show suggestions, until first letter is inputed and it matches it -->
-          <template slot-scope="{ suggestion }">
-            <span class="my-suggestion-item">{{ suggestion.item }}</span>
-          </template>
-        </vue-autosuggest>
-      </div>
       <div class="col-sm-1">
-        <i class="bi bi-x-circle-fill" @click="removeExercise"></i>
+        <i class="bi bi-x-circle-fill hoverable" @click="removeExercise"></i>
+      </div>
+      <div class="col-sm-11">
+        <label for="Exercise">Exercise Name: </label>
+        <input
+          class="form-control"
+          type="text"
+          list="exercises"
+          v-model="exerciseData.exerciseName"
+        />
+
+        <datalist id="exercises">
+          <option
+            v-for="(exerciseName, idx) in getExerciseSuggestions"
+            :key="idx"
+            :value="exerciseName"
+            >{{ exerciseName }}</option
+          >
+        </datalist>
       </div>
     </div>
 
@@ -31,7 +33,10 @@
     <div v-for="(set, index) in exerciseData.sets" :key="index">
       <div class="row">
         <div class="col-sm-1">
-          <i class="bi bi-x-circle-fill" @click="removeSet(index)"></i>
+          <i
+            class="bi bi-x-circle-fill hoverable"
+            @click="removeSet(index)"
+          ></i>
         </div>
         <div class="col">
           <label for="Exercise1">Weight </label>
@@ -65,12 +70,16 @@
 </template>
 
 <script lang="ts">
+import { Exercise } from "@/interfaces/workout.interface";
 import Vue from "vue";
-import { VueAutosuggest } from "vue-autosuggest"; // ? Same problem with calendar component. When creating .d.ts file, it says there is no exported member
-// ! IF you havent added another set, you can not remove the exercise because the parent component does not recognize that this component exist
 
 export default Vue.extend({
   name: "Exercise",
+  props: {
+    copiedExerciseData: {
+      type: Object as () => Exercise,
+    },
+  },
   data() {
     return {
       exerciseData: {
@@ -80,10 +89,22 @@ export default Vue.extend({
       },
     };
   },
+  created() {
+    if (this.copiedExerciseData) {
+      console.log(this.copiedExerciseData);
+      this.exerciseData.exerciseName = this.copiedExerciseData.exerciseName;
+      this.exerciseData.sets = [];
+      this.copiedExerciseData.sets.forEach((set) => {
+        this.exerciseData.sets.push({
+          weight: set.weight,
+          reps: set.reps,
+          videoUrl: "",
+        });
+      });
+    }
+    this.$emit("emitExerciseData", this.exerciseData);
+  },
   methods: {
-    selectHandler(event: any) {
-      if (event !== null) this.exerciseData.exerciseName = event.item;
-    },
     previewFiles(event: any, setIdx: number): void {
       if (this.exerciseData.sets[setIdx] !== undefined) {
         let video = event.target.files[0];
@@ -148,15 +169,14 @@ export default Vue.extend({
   },
   computed: {
     getExerciseSuggestions() {
-      return [
-        {
-          data: this.$store.getters.getUserData.exercises,
-        },
-      ];
+      return this.$store.getters.getUserData.exercises;
     },
-  },
-  components: {
-    VueAutosuggest,
   },
 });
 </script>
+
+<style scoped>
+.hoverable {
+  cursor: pointer;
+}
+</style>

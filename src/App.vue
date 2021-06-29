@@ -28,25 +28,8 @@ export default Vue.extend({
           .catch((err) => {
             console.error(err);
           });
-
-        // Pushes the user to the home page
-        if (this.$router.currentRoute.fullPath !== "/") {
-          this.$router.push("/");
-        }
-      } else {
-        // The user is not sigend in. Pushes user to create an account.
-        if (this.$router.currentRoute.fullPath !== "/createAcccount")
-          this.routeToCreateAcconut();
       }
     });
-  },
-  methods: {
-    routeToCreateAcconut() {
-      this.$router.push("/createAccount");
-    },
-    routeToHome() {
-      this.$router.push("/");
-    },
   },
 });
 </script>

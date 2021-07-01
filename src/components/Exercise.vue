@@ -2,49 +2,48 @@
   <div class="form-group">
     <br />
 
-    <div class="row">
-      <div class="col-sm-1">
-        <i
-          class="bi bi-x-circle-fill hoverable"
-          style="font-size: 1.3rem;"
-          @click="removeExercise"
-        ></i>
-      </div>
-      <div class="col-sm-11">
-        <label for="Exercise">Exercise Name: </label>
-        <input
-          class="form-control"
-          type="text"
-          list="exercises"
-          v-model="exerciseData.exerciseName"
-        />
+    <div class="container-fluid">
+      <div class="row mb-1">
+        <div class="col-sm-6">
+          <label for="Exercise">
+            <i
+              class="bi bi-x-circle-fill hoverable"
+              style="font-size: 1rem;"
+              @click="removeExercise"
+            ></i
+            >Exercise Name:
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            list="exercises"
+            v-model="exerciseData.exerciseName"
+          />
 
-        <datalist id="exercises">
-          <option
-            v-for="(exerciseName, idx) in getExerciseSuggestions"
-            :key="idx"
-            :value="exerciseName"
-            >{{ exerciseName }}</option
-          >
-        </datalist>
+          <datalist id="exercises">
+            <option
+              v-for="(exerciseName, idx) in getExerciseSuggestions"
+              :key="idx"
+              :value="exerciseName"
+              >{{ exerciseName }}</option
+            >
+          </datalist>
+        </div>
       </div>
     </div>
 
-    <br />
-
     <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
-    <div v-for="(set, index) in exerciseData.sets" :key="index">
-      <div class="row">
-        <div class="col-sm-1">
-          <i
-            class="bi bi-x-circle-fill hoverable"
-            style="font-size: 1.3rem;"
-            @click="removeSet(index)"
-          ></i>
-        </div>
+    <div class="container-fluid">
+      <div v-for="(set, index) in exerciseData.sets" :key="index" class="row">
         <div class="col">
-          <label for="Exercise1">Weight </label>
+          <label for="Exercise1">
+            <i
+              class="bi bi-x-circle-fill hoverable"
+              @click="removeSet(index)"
+            ></i
+            >Weight
+          </label>
           <input v-model="set.weight" type="number" class="form-control" />
         </div>
         <div class="col">
@@ -79,9 +78,11 @@
       <br />
     </div>
 
-    <button @click="addNewSet" class="btn btn-info" type="button">
-      <i class="bi bi-plus-circle-fill"></i> Set
-    </button>
+    <div class="container-fluid">
+      <button @click="addNewSet" class="btn btn-info" type="button">
+        <i class="bi bi-plus-circle-fill"></i> Set
+      </button>
+    </div>
   </div>
 </template>
 
@@ -219,4 +220,8 @@ export default Vue.extend({
 .image-upload > input {
   display: none;
 }
+
+/* * {
+  outline: 1px solid red;
+} */
 </style>

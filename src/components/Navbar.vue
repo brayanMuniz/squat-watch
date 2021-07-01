@@ -43,18 +43,9 @@
 
           <!-- Todo: if dropdown toggle is activated, dont show this  -->
           <li class="nav-item" v-if="userSignedIn">
-            <router-link class="navbar-link" v-if="onMobile"
-              >Profile</router-link
-            >
-            <router-link to="/profile" v-else
-              ><img
-                v-if="userHasProfileImage && userSignedIn"
-                class="navbar-brand"
-                :src="profileImage"
-                width="60px"
-                height="60px"
-              />
-            </router-link>
+            <router-link class="nav-link" to="/profile"
+              ><i class="bi bi-person-circle"></i
+            ></router-link>
           </li>
         </ul>
       </div>

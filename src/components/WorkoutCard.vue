@@ -1,21 +1,25 @@
 <template>
-  <div class="card text-dark bg-light">
+  <div class="card text-dark bg-light px-0">
     <div class="card-body">
       <h5 class="card-title">{{ cardWorkoutData.name }}</h5>
       <h6 class="card-subtitle mb-2 text-muted">
         {{ dateToMonthDay(cardWorkoutData.date) }}
       </h6>
 
-      <p
-        class="card-text my-0"
+      <div class="row">
+        <div class="col">Exercise</div>
+        <div class="col">Best Set</div>
+      </div>
+      <div
+        class="row lh-1"
         v-for="(exercise, idx) in cardWorkoutData.exercises"
         :key="idx"
       >
-        {{ exercise.sets.length }} x
-        {{ exercise.exerciseName }}
-        | Best Set :
-        {{ getBestSetAsString(exercise.sets) }}
-      </p>
+        <div class="col">
+          {{ exercise.sets.length }} x {{ exercise.exerciseName }}
+        </div>
+        <div class="col">{{ getBestSetAsString(exercise.sets) }}</div>
+      </div>
     </div>
   </div>
 </template>

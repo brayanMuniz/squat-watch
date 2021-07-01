@@ -79,13 +79,13 @@
           </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 px-0">
           <div
             class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
           >
             <div
               class="col"
-              v-for="(workout, workoutIdx) in userPreviousWorkouts.exerciseData"
+              v-for="(workout, workoutIdx) in userPreviousWorkouts.workoutData"
               :key="workoutIdx"
             >
               <div class="card text-dark bg-light my-2">
@@ -102,16 +102,22 @@
                     {{ dateToMonthDay(workout.date) }}
                   </h6>
 
-                  <p
-                    class="card-text my-0"
+                  <div class="row">
+                    <div class="col">Exercise</div>
+                    <div class="col">Best Set</div>
+                  </div>
+                  <div
+                    class="row lh-1"
                     v-for="(exercise, idx) in workout.exercises"
                     :key="idx"
                   >
-                    {{ exercise.sets.length }} x
-                    {{ exercise.exerciseName }}
-                    | Best Set :
-                    {{ getBestSetAsString(exercise.sets) }}
-                  </p>
+                    <div class="col">
+                      {{ exercise.sets.length }} x {{ exercise.exerciseName }}
+                    </div>
+                    <div class="col">
+                      {{ getBestSetAsString(exercise.sets) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -346,7 +352,7 @@ export default Vue.extend({
   },
   computed: {
     userPreviousWorkouts() {
-      return this.$store.getters.getSavedExerciseData;
+      return this.$store.getters.getSavedWorkoutData;
     },
   },
   components: {

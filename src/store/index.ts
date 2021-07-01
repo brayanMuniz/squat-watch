@@ -9,10 +9,10 @@ export default new Vuex.Store({
   state: {
     myUID: "",
     userData: {},
-    savedExerciseData: {
+    savedWorkoutData: {
       startDate: String(),
       endDate: String(),
-      exerciseData: Array<Workout>(),
+      workoutData: Array<Workout>(),
     },
     profilePictureUrl: "",
   },
@@ -26,8 +26,8 @@ export default new Vuex.Store({
     getMyProfilePicture: (state) => {
       return state.profilePictureUrl;
     },
-    getSavedExerciseData: (state) => {
-      return state.savedExerciseData;
+    getSavedWorkoutData: (state) => {
+      return state.savedWorkoutData;
     },
   },
   mutations: {
@@ -41,36 +41,36 @@ export default new Vuex.Store({
       state.profilePictureUrl = newProfilePicture;
     },
     // Todo: add on dont totally replace
-    updateSavedExerciseData(
+    updateSavedWorkoutData(
       state,
-      newExerciseData: {
+      newWorkoutData: {
         startDate: string;
         endDate: string;
-        exerciseData: Array<Workout>;
+        workoutData: Array<Workout>;
       }
     ) {
-      newExerciseData.exerciseData.forEach((workout) => {
-        if (!state.savedExerciseData.exerciseData.includes(workout))
-          state.savedExerciseData.exerciseData.push(workout);
+      newWorkoutData.workoutData.forEach((workout) => {
+        if (!state.savedWorkoutData.workoutData.includes(workout))
+          state.savedWorkoutData.workoutData.push(workout);
       });
 
       // if startDate is further back replace date
-      if (state.savedExerciseData.startDate) {
-        const startDate1 = moment(state.savedExerciseData.startDate);
-        const startDate2 = moment(newExerciseData.startDate);
+      if (state.savedWorkoutData.startDate) {
+        const startDate1 = moment(state.savedWorkoutData.startDate);
+        const startDate2 = moment(newWorkoutData.startDate);
         const startDateDiff: number = startDate2.diff(startDate1, "days");
         if (startDateDiff < 0)
-          state.savedExerciseData.startDate = newExerciseData.startDate;
-      } else state.savedExerciseData.startDate = newExerciseData.startDate;
+          state.savedWorkoutData.startDate = newWorkoutData.startDate;
+      } else state.savedWorkoutData.startDate = newWorkoutData.startDate;
 
       // if endDate is more recent replace it
-      if (state.savedExerciseData.endDate) {
-        const endDate1 = moment(state.savedExerciseData.endDate);
-        const endDate2 = moment(newExerciseData.endDate);
+      if (state.savedWorkoutData.endDate) {
+        const endDate1 = moment(state.savedWorkoutData.endDate);
+        const endDate2 = moment(newWorkoutData.endDate);
         const endDateDiff: number = endDate1.diff(endDate2, "days");
         if (endDateDiff < 0)
-          state.savedExerciseData.endDate = newExerciseData.endDate;
-      } else state.savedExerciseData.endDate = newExerciseData.endDate;
+          state.savedWorkoutData.endDate = newWorkoutData.endDate;
+      } else state.savedWorkoutData.endDate = newWorkoutData.endDate;
     },
   },
   actions: {},

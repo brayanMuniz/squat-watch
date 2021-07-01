@@ -133,31 +133,12 @@
     <div
       class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5"
     >
-      <div
-        class="col"
+      <WorkoutCard
+        class="col mx-1"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
-      >
-        <div class="card text-dark bg-light">
-          <div class="card-body">
-            <h5 class="card-title">{{ workout.name }}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
-              {{ dateToMonthDay(workout.date) }}
-            </h6>
-
-            <p
-              class="card-text my-0"
-              v-for="(exercise, idx) in workout.exercises"
-              :key="idx"
-            >
-              {{ exercise.sets.length }} x
-              {{ exercise.exerciseName }}
-              | Best Set :
-              {{ getBestSetAsString(exercise.sets) }}
-            </p>
-          </div>
-        </div>
-      </div>
+        :workoutData="workout"
+      />
     </div>
 
     <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
@@ -178,6 +159,7 @@ import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
+import WorkoutCard from "@/components/WorkoutCard.vue";
 // @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
 
@@ -221,13 +203,13 @@ export default Vue.extend({
   },
   async created() {
     if (this.$store.getters.getMyUID !== "") {
-      let exerciseData = [];
+      let workoutData: Array<Workout> = [];
       if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
-        exerciseData = this.$store.getters.getSavedExerciseData.exerciseData;
+        workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
       } else {
         await this.retriveWorkoutData(this.startDate, this.endDate)
           .then((res) => {
-            exerciseData = res;
+            workoutData = res;
           })
           .catch((err) => {
             this.dataReady = false;
@@ -235,20 +217,20 @@ export default Vue.extend({
           });
       }
 
-      this.allWorkouts = exerciseData;
+      this.allWorkouts = workoutData;
       let convertedData:
         | Array<ExerciseChartData>
-        | undefined = this.covertWorkoutDataToChartData(exerciseData);
+        | undefined = this.covertWorkoutDataToChartData(workoutData);
       if (convertedData.length > 0) {
         this.currentlySelectedExercise = convertedData[0].exerciseName;
         this.dataCollection = convertedData[0].chartData;
         this.allExerciseChartData = convertedData;
         this.dataReady = true;
 
-        this.$store.commit("updateSavedExerciseData", {
+        this.$store.commit("updateSavedWorkoutData", {
           startDate: this.startDate,
           endDate: this.endDate,
-          exerciseData: exerciseData,
+          workoutData: workoutData,
         });
       } else {
         this.noDataInThisDateRange = true;
@@ -262,8 +244,8 @@ export default Vue.extend({
         endDate
       );
       let currentDates: Array<string> = this.generateArrayOfDates(
-        this.$store.getters.getSavedExerciseData.startDate,
-        this.$store.getters.getSavedExerciseData.endDate
+        this.$store.getters.getSavedWorkoutData.startDate,
+        this.$store.getters.getSavedWorkoutData.endDate
       );
       return wantedDates.filter((date) => !currentDates.includes(date));
     },
@@ -545,14 +527,12 @@ export default Vue.extend({
       });
       return videoUrl;
     },
-    dateToMonthDay(date: string): string {
-      return moment(date).format("MMM DD");
-    },
   },
   components: {
     LineChart,
     FunctionalCalendar,
     Navbar,
+    WorkoutCard,
   },
 });
 </script>

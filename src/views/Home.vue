@@ -44,83 +44,86 @@
     </div>
 
     <!-- Workout Chart, Table and video. -->
-    <div class="row">
-      <div
-        class="col-xxl-6"
-        v-for="exercise in allExerciseChartData"
-        :key="exercise.exerciseName"
-      >
-        <div class="row">
-          <div class="col-lg-5">
-            <div v-if="dataReady" class="container-fluid">
-              <!-- :options prop needs to be passed in or there will be an error -->
-              <LineChart
-                :chartData="exercise.chartData"
-                :options="chartOptions"
-                :workingSets="exercise.setsWithDates"
-                :exerciseName="exercise.exerciseName"
-                v-on:clickedPoint="changeVideoFromExercise($event)"
-              />
+    <div class="container-fluid">
+      <div class="row">
+        <div
+          class="col-xxl-6"
+          v-for="exercise in allExerciseChartData"
+          :key="exercise.exerciseName"
+        >
+          <div class="row">
+            <div class="col-lg-5 col-sm-12">
+              <div v-if="dataReady" class="container-fluid">
+                <!-- :options prop needs to be passed in or there will be an error -->
+                <LineChart
+                  :chartData="exercise.chartData"
+                  :options="chartOptions"
+                  :workingSets="exercise.setsWithDates"
+                  :exerciseName="exercise.exerciseName"
+                  v-on:clickedPoint="changeVideoFromExercise($event)"
+                />
+              </div>
             </div>
-          </div>
-          <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-          <div class="col-lg-4">
-            <table class="table container-fluid">
-              <thead>
-                <tr>
-                  <th scope="col">Date</th>
-                  <th>1 Rep Max</th>
-                  <th scope="col">Best Set</th>
-                  <th scope="col"># Of Sets</th>
-                  <th scope="col">Video</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
-                  <th scope="row">{{ e.date }}</th>
-                  <td>{{ findBestOneRepMax(e.sets) }}</td>
-                  <td>{{ getBestSetAsString(e.sets) }}</td>
-                  <td>{{ e.sets.length }}</td>
-                  <td v-if="getVideoUrlFromSets(e.sets)">
-                    <i
-                      class="bi bi-play-btn-fill hoverable"
-                      @click="
-                        changeVideoFromExercise({
-                          exerciseName: exercise.exerciseName,
-                          videoUrl: getVideoUrlFromSets(e.sets),
-                        })
-                      "
-                    ></i>
-                  </td>
-                  <td v-else><i class="bi bi-slash-circle"></i></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div v-if="exercise.videoReady" class="col-lg-3">
-            <div v-if="exercise.videoReady" class="container-fluid">
-              <video
-                ref="videoPlayer"
-                width="320"
-                height="240"
-                autoplay
-                controls
-              >
-                <source :src="exercise.videoUrl" />
-                Your browser does not support video.
-              </video>
+            <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
+            <div class="col-lg-3 col-sm-12">
+              <table class="table container-fluid">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th>1 Rep Max</th>
+                    <th scope="col">Best Set</th>
+                    <th scope="col"># Of Sets</th>
+                    <th scope="col">Video</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
+                    <th scope="row">{{ e.date }}</th>
+                    <td>{{ findBestOneRepMax(e.sets) }}</td>
+                    <td>{{ getBestSetAsString(e.sets) }}</td>
+                    <td>{{ e.sets.length }}</td>
+                    <td v-if="getVideoUrlFromSets(e.sets)">
+                      <i
+                        class="bi bi-play-btn-fill hoverable"
+                        @click="
+                          changeVideoFromExercise({
+                            exerciseName: exercise.exerciseName,
+                            videoUrl: getVideoUrlFromSets(e.sets),
+                          })
+                        "
+                      ></i>
+                    </td>
+                    <td v-else><i class="bi bi-slash-circle"></i></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div
-              class="spinner-border d-flex justify-content-center"
-              role="status"
-              v-else-if="exercise.videoLoading"
+              v-if="exercise.videoReady"
+              class="col-lg-4 col-sm-12 container-fluid"
             >
-              <span class="visually-hidden">Loading...</span>
-            </div>
+              <div v-if="exercise.videoReady" class="container-fluid">
+                <video
+                  ref="videoPlayer"
+                  width="320"
+                  height="240"
+                  autoplay
+                  controls
+                >
+                  <source :src="exercise.videoUrl" />
+                  Your browser does not support video.
+                </video>
+              </div>
 
-            <div v-else></div>
+              <div
+                class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
+                role="status"
+                v-else-if="exercise.videoLoading"
+              >
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -192,7 +195,7 @@ export default Vue.extend({
       currentlySelectedExercise: "Squat",
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         tooltips: {
           callbacks: {},
         },

@@ -1,5 +1,5 @@
 <template>
-  <div class="card text-light bg-dark px-0">
+  <div class="card text-dark bg-light px-0">
     <div class="card-body">
       <h5 class="card-title">{{ cardWorkoutData.name }}</h5>
       <h6 class="card-subtitle mb-2 text-muted">

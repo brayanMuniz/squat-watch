@@ -25,6 +25,12 @@
             >
           </li>
 
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link class="nav-link active" to="/history"
+              >History</router-link
+            >
+          </li>
+
           <li class="nav-item" v-if="!userSignedIn">
             <router-link class="nav-link" to="/signIn">Sign In</router-link>
           </li>
@@ -37,13 +43,18 @@
 
           <!-- Todo: if dropdown toggle is activated, dont show this  -->
           <li class="nav-item" v-if="userSignedIn">
-            <router-link class="navbar-brand" to="/profile"
+            <router-link class="navbar-link" v-if="onMobile"
+              >Profile</router-link
+            >
+            <router-link to="/profile" v-else
               ><img
                 v-if="userHasProfileImage && userSignedIn"
+                class="navbar-brand"
                 :src="profileImage"
                 width="60px"
                 height="60px"
-            /></router-link>
+              />
+            </router-link>
           </li>
         </ul>
       </div>
@@ -87,6 +98,11 @@ export default Vue.extend({
         store.getters.getUserData.profileImageUrl != "" &&
         store.getters.getUserData.profileImageUrl
       );
+    },
+    onMobile(): boolean {
+      // Bootstrap defined small breakpoint
+      if (window.screen.width < 576) return true;
+      return false;
     },
   },
 });

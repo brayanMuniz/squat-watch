@@ -4,6 +4,7 @@ import Home from "../views/Home.vue";
 import Upload from "../views/Upload.vue";
 import CreateAccount from "@/views/CreateAccount.vue";
 import SignIn from "@/views/SignIn.vue";
+import History from "@/views/History.vue";
 
 Vue.use(VueRouter);
 
@@ -17,6 +18,11 @@ const routes: Array<RouteConfig> = [
     path: "/upload",
     name: "Upload",
     component: Upload,
+  },
+  {
+    path: "/history",
+    name: "History",
+    component: History,
   },
   {
     path: "/createAccount",

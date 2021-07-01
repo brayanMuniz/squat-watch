@@ -1,3 +1,5 @@
+import { Workout } from "@/interfaces/workout.interface";
+import moment from "moment";
 import Vue from "vue";
 import Vuex from "vuex";
 
@@ -7,7 +9,11 @@ export default new Vuex.Store({
   state: {
     myUID: "",
     userData: {},
-    savedExerciseData: {},
+    savedWorkoutData: {
+      startDate: String(),
+      endDate: String(),
+      workoutData: Array<Workout>(),
+    },
     profilePictureUrl: "",
   },
   getters: {
@@ -20,8 +26,8 @@ export default new Vuex.Store({
     getMyProfilePicture: (state) => {
       return state.profilePictureUrl;
     },
-    getSavedExerciseData: (state) => {
-      return state.savedExerciseData;
+    getSavedWorkoutData: (state) => {
+      return state.savedWorkoutData;
     },
   },
   mutations: {
@@ -35,8 +41,36 @@ export default new Vuex.Store({
       state.profilePictureUrl = newProfilePicture;
     },
     // Todo: add on dont totally replace
-    updateSavedExerciseData(state, newExerciseData: any) {
-      state.savedExerciseData = newExerciseData;
+    updateSavedWorkoutData(
+      state,
+      newWorkoutData: {
+        startDate: string;
+        endDate: string;
+        workoutData: Array<Workout>;
+      }
+    ) {
+      newWorkoutData.workoutData.forEach((workout) => {
+        if (!state.savedWorkoutData.workoutData.includes(workout))
+          state.savedWorkoutData.workoutData.push(workout);
+      });
+
+      // if startDate is further back replace date
+      if (state.savedWorkoutData.startDate) {
+        const startDate1 = moment(state.savedWorkoutData.startDate);
+        const startDate2 = moment(newWorkoutData.startDate);
+        const startDateDiff: number = startDate2.diff(startDate1, "days");
+        if (startDateDiff < 0)
+          state.savedWorkoutData.startDate = newWorkoutData.startDate;
+      } else state.savedWorkoutData.startDate = newWorkoutData.startDate;
+
+      // if endDate is more recent replace it
+      if (state.savedWorkoutData.endDate) {
+        const endDate1 = moment(state.savedWorkoutData.endDate);
+        const endDate2 = moment(newWorkoutData.endDate);
+        const endDateDiff: number = endDate1.diff(endDate2, "days");
+        if (endDateDiff < 0)
+          state.savedWorkoutData.endDate = newWorkoutData.endDate;
+      } else state.savedWorkoutData.endDate = newWorkoutData.endDate;
     },
   },
   actions: {},

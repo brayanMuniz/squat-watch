@@ -18,7 +18,7 @@
 
       <!-- TODO: make contents go on right side -->
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav text-end ms-auto">
           <li class="nav-item" v-if="userSignedIn">
             <router-link class="nav-link active" to="/upload"
               >Add Workout</router-link
@@ -44,8 +44,8 @@
           <!-- Todo: if dropdown toggle is activated, dont show this  -->
           <li class="nav-item" v-if="userSignedIn">
             <router-link class="nav-link" to="/profile"
-              ><i class="bi bi-person-circle"></i
-            ></router-link>
+              ><i class="bi bi-person-circle"> </i>
+            </router-link>
           </li>
         </ul>
       </div>

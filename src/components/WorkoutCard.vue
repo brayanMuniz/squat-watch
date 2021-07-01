@@ -1,5 +1,5 @@
 <template>
-  <div class="card text-dark bg-light px-0">
+  <div class="card text-light bg-dark px-0">
     <div class="card-body">
       <h5 class="card-title">{{ cardWorkoutData.name }}</h5>
       <h6 class="card-subtitle mb-2 text-muted">
@@ -8,17 +8,20 @@
 
       <div class="row">
         <div class="col">Exercise</div>
-        <div class="col">Best Set</div>
+        <div class="col me-auto text-end">Best Set</div>
       </div>
+
       <div
         class="row lh-1"
         v-for="(exercise, idx) in cardWorkoutData.exercises"
         :key="idx"
       >
-        <div class="col">
+        <div class="col-8 text-break">
           {{ exercise.sets.length }} x {{ exercise.exerciseName }}
         </div>
-        <div class="col">{{ getBestSetAsString(exercise.sets) }}</div>
+        <div class="col-4 text-end">
+          {{ getBestSetAsString(exercise.sets) }}
+        </div>
       </div>
     </div>
   </div>

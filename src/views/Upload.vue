@@ -1,107 +1,124 @@
 <template>
   <div>
     <Navbar />
-    <div class="row">
-      <div class="col-md-8">
-        <div class="container-fluid">
-          <form @submit.prevent="uploadWorkout">
-            <div class="row">
-              <div class="col">
-                <div class="form-group">
-                  <label for="Workout Name">Workout Name: </label>
-                  <input
-                    v-model.trim="workoutName"
-                    type="text"
-                    class="form-control"
-                    id="workoutName"
-                  />
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-8">
+          <div>
+            <form @submit.prevent="uploadWorkout">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label for="Workout Name">Workout Name: </label>
+                      <input
+                        v-model.trim="workoutName"
+                        type="text"
+                        class="form-control"
+                        id="workoutName"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-group">
+                      <label for="Workout Name">Date: </label>
+                      <input
+                        v-model.trim="workoutDate"
+                        type="date"
+                        class="form-control"
+                        id="workoutDate"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="col">
-                <div class="form-group">
-                  <label for="Workout Name">Date: </label>
-                  <input
-                    v-model.trim="workoutDate"
-                    type="date"
-                    class="form-control"
-                    id="workoutDate"
-                  />
+
+              <!-- TODO: add a length of workout type to show how long workout was  -->
+              <!--         Figure out what time type is valid on all browsers-->
+
+              <div v-for="exercise in amountOfExercises.amount" :key="exercise">
+                <ExerciseComponent
+                  :copiedExerciseData="
+                    amountOfExercises.copiedExerciseData[exercise - 1]
+                  "
+                  v-on:emitExerciseData="watchForData($event)"
+                  v-on:removeExercise="removeExerciseComp($event)"
+                />
+                <br />
+              </div>
+
+              <div class="row">
+                <div class="col">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    @click="addExercise"
+                  >
+                    Add Exercise
+                  </button>
+                </div>
+                <div class="col">
+                  <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
               </div>
-            </div>
 
-            <!-- TODO: add a length of workout type to show how long workout was  -->
-            <!--         Figure out what time type is valid on all browsers-->
-
-            <div v-for="exercise in amountOfExercises.amount" :key="exercise">
-              <ExerciseComponent
-                :copiedExerciseData="
-                  amountOfExercises.copiedExerciseData[exercise - 1]
-                "
-                v-on:emitExerciseData="watchForData($event)"
-                v-on:removeExercise="removeExerciseComp($event)"
-              />
               <br />
+
+              <!-- TODO: Have a progress bar so you can tell when the user upload the video and set to database -->
+            </form>
+            <div class="progress" v-if="uploading">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                :style="{ width: poggersUpload }"
+                aria-valuenow="25"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
             </div>
-
-            <button
-              type="button"
-              class="btn btn-secondary"
-              @click="addExercise"
-            >
-              Add Exercise
-            </button>
-            <br />
-
-            <!-- TODO: Have a progress bar so you can tell when the user upload the video and set to database -->
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </form>
-          <div class="progress" v-if="uploading">
-            <div
-              class="progress-bar"
-              role="progressbar"
-              :style="{ width: poggersUpload }"
-              aria-valuenow="25"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            ></div>
           </div>
         </div>
-      </div>
 
-      <div class="col-md-4">
-        <div
-          class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
-        >
+        <div class="col-md-4 px-0">
           <div
-            class="col"
-            v-for="(workout, workoutIdx) in userPreviousWorkouts.exerciseData"
-            :key="workoutIdx"
+            class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
           >
-            <div class="card text-dark bg-light my-2">
-              <div class="card-body">
-                <h5 class="card-title">
-                  {{ workout.name }}
-                  <i
-                    @click="copyWorkoutToForm(workout)"
-                    class="bi bi-clipboard hoverable"
-                  ></i>
-                </h5>
+            <div
+              class="col"
+              v-for="(workout, workoutIdx) in userPreviousWorkouts.workoutData"
+              :key="workoutIdx"
+            >
+              <div class="card text-dark bg-light my-2">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    {{ workout.name }}
+                    <i
+                      @click="copyWorkoutToForm(workout)"
+                      class="bi bi-clipboard hoverable"
+                    ></i>
+                  </h5>
 
-                <h6 class="card-subtitle mb-2 text-muted">
-                  {{ dateToMonthDay(workout.date) }}
-                </h6>
+                  <h6 class="card-subtitle mb-2 text-muted">
+                    {{ dateToMonthDay(workout.date) }}
+                  </h6>
 
-                <p
-                  class="card-text my-0"
-                  v-for="(exercise, idx) in workout.exercises"
-                  :key="idx"
-                >
-                  {{ exercise.sets.length }} x
-                  {{ exercise.exerciseName }}
-                  | Best Set :
-                  {{ getBestSetAsString(exercise.sets) }}
-                </p>
+                  <div class="row">
+                    <div class="col">Exercise</div>
+                    <div class="col">Best Set</div>
+                  </div>
+                  <div
+                    class="row lh-1"
+                    v-for="(exercise, idx) in workout.exercises"
+                    :key="idx"
+                  >
+                    <div class="col">
+                      {{ exercise.sets.length }} x {{ exercise.exerciseName }}
+                    </div>
+                    <div class="col">
+                      {{ getBestSetAsString(exercise.sets) }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -335,7 +352,7 @@ export default Vue.extend({
   },
   computed: {
     userPreviousWorkouts() {
-      return this.$store.getters.getSavedExerciseData;
+      return this.$store.getters.getSavedWorkoutData;
     },
   },
   components: {

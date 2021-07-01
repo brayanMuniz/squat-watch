@@ -104,7 +104,7 @@
 
                   <div class="row">
                     <div class="col">Exercise</div>
-                    <div class="col">Best Set</div>
+                    <div class="col text-end">Best Set</div>
                   </div>
                   <div
                     class="row lh-1"
@@ -114,7 +114,7 @@
                     <div class="col">
                       {{ exercise.sets.length }} x {{ exercise.exerciseName }}
                     </div>
-                    <div class="col">
+                    <div class="col text-end">
                       {{ getBestSetAsString(exercise.sets) }}
                     </div>
                   </div>
@@ -260,6 +260,7 @@ export default Vue.extend({
         }
         batch.set(userFirestoreWorkoutPath, workout);
 
+        // Update user doc of what exercises user does
         if (addNewExerciseToUserData.length > 0) {
           let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
             addNewExerciseToUserData
@@ -274,6 +275,31 @@ export default Vue.extend({
           });
         }
 
+        // Update /users/exercises collection
+        let pathToExercisesCollection = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(myUid)
+          .collection("exercises");
+
+        for (let exercise in workout.exercises) {
+          let workoutsDone: any = {};
+          workoutsDone[this.workoutDate] = workout.exercises[exercise].sets;
+          let exerciseName: string = workout.exercises[exercise].exerciseName;
+          if (
+            this.userHasExerciseLogged(workout.exercises[exercise].exerciseName)
+          )
+            batch.update(
+              pathToExercisesCollection.doc(exerciseName),
+              workoutsDone
+            );
+          else
+            batch.set(
+              pathToExercisesCollection.doc(exerciseName),
+              workoutsDone
+            );
+        }
+
         batch
           .commit()
           .then(() => {
@@ -286,12 +312,6 @@ export default Vue.extend({
             console.error("Batch no good SADGE :(");
           });
       }
-    },
-    copyWorkoutToForm(workout: Workout) {
-      this.amountOfExercises.amount = 0;
-      this.amountOfExercises.copiedExerciseData = workout.exercises;
-      this.workoutName = workout.name;
-      this.amountOfExercises.amount = this.amountOfExercises.copiedExerciseData.length;
     },
     // Component Data Sync ===================================
     addExercise() {
@@ -321,6 +341,13 @@ export default Vue.extend({
         console.log("Pushing new exercise");
         this.exercises.push(changedData);
       }
+    },
+    // Visual helpers
+    copyWorkoutToForm(workout: Workout) {
+      this.amountOfExercises.amount = 0;
+      this.amountOfExercises.copiedExerciseData = workout.exercises;
+      this.workoutName = workout.name;
+      this.amountOfExercises.amount = this.amountOfExercises.copiedExerciseData.length;
     },
     userHasExerciseLogged(exerciseName: string): boolean {
       let isLogged = false;

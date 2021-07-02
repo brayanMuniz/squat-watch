@@ -44,83 +44,86 @@
     </div>
 
     <!-- Workout Chart, Table and video. -->
-    <div class="row">
-      <div
-        class="col-xxl-6"
-        v-for="exercise in allExerciseChartData"
-        :key="exercise.exerciseName"
-      >
-        <div class="row">
-          <div class="col-lg-5">
-            <div v-if="dataReady">
-              <!-- :options prop needs to be passed in or there will be an error -->
-              <LineChart
-                :chartData="exercise.chartData"
-                :options="chartOptions"
-                :workingSets="exercise.setsWithDates"
-                :exerciseName="exercise.exerciseName"
-                v-on:clickedPoint="changeVideoFromExercise($event)"
-              />
+    <div class="container-fluid">
+      <div class="row">
+        <div
+          class="col-xxl-6"
+          v-for="exercise in allExerciseChartData"
+          :key="exercise.exerciseName"
+        >
+          <div class="row">
+            <div class="col-lg-5 col-sm-12">
+              <div v-if="dataReady" class="container-fluid">
+                <!-- :options prop needs to be passed in or there will be an error -->
+                <LineChart
+                  :chartData="exercise.chartData"
+                  :options="chartOptions"
+                  :workingSets="exercise.setsWithDates"
+                  :exerciseName="exercise.exerciseName"
+                  v-on:clickedPoint="changeVideoFromExercise($event)"
+                />
+              </div>
             </div>
-          </div>
-          <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-          <div class="col-lg-4">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">Date</th>
-                  <th>1 Rep Max</th>
-                  <th scope="col">Best Set</th>
-                  <th scope="col">Amount Of Sets</th>
-                  <th scope="col">Video</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
-                  <th scope="row">{{ e.date }}</th>
-                  <td>{{ findBestOneRepMax(e.sets) }}</td>
-                  <td>{{ getBestSetAsString(e.sets) }}</td>
-                  <td>{{ e.sets.length }}</td>
-                  <td v-if="getVideoUrlFromSets(e.sets)">
-                    <i
-                      class="bi bi-play-btn-fill hoverable"
-                      @click="
-                        changeVideoFromExercise({
-                          exerciseName: exercise.exerciseName,
-                          videoUrl: getVideoUrlFromSets(e.sets),
-                        })
-                      "
-                    ></i>
-                  </td>
-                  <td v-else><i class="bi bi-slash-circle"></i></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="col-lg-3">
-            <div v-if="exercise.videoReady">
-              <video
-                ref="videoPlayer"
-                width="320"
-                height="240"
-                autoplay
-                controls
-              >
-                <source :src="exercise.videoUrl" />
-                Your browser does not support video.
-              </video>
+            <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
+            <div class="col-lg-3 col-sm-12">
+              <table class="table container-fluid">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th>1 Rep Max</th>
+                    <th scope="col">Best Set</th>
+                    <th scope="col"># Of Sets</th>
+                    <th scope="col">Video</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
+                    <th scope="row">{{ e.date }}</th>
+                    <td>{{ findBestOneRepMax(e.sets) }}</td>
+                    <td>{{ getBestSetAsString(e.sets) }}</td>
+                    <td>{{ e.sets.length }}</td>
+                    <td v-if="getVideoUrlFromSets(e.sets)">
+                      <i
+                        class="bi bi-play-btn-fill hoverable"
+                        @click="
+                          changeVideoFromExercise({
+                            exerciseName: exercise.exerciseName,
+                            videoUrl: getVideoUrlFromSets(e.sets),
+                          })
+                        "
+                      ></i>
+                    </td>
+                    <td v-else><i class="bi bi-slash-circle"></i></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div
-              class="spinner-border d-flex justify-content-center"
-              role="status"
-              v-else-if="exercise.videoLoading"
+              v-if="exercise.videoReady"
+              class="col-lg-4 col-sm-12 container-fluid"
             >
-              <span class="visually-hidden">Loading...</span>
-            </div>
+              <div v-if="exercise.videoReady" class="container-fluid">
+                <video
+                  ref="videoPlayer"
+                  width="320"
+                  height="240"
+                  autoplay
+                  controls
+                >
+                  <source :src="exercise.videoUrl" />
+                  Your browser does not support video.
+                </video>
+              </div>
 
-            <div v-else>No Video</div>
+              <div
+                class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
+                role="status"
+                v-else-if="exercise.videoLoading"
+              >
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -130,36 +133,15 @@
     <div
       class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5"
     >
-      <div
-        class="col"
+      <WorkoutCard
+        class="col mx-1"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
-      >
-        <div class="card text-dark bg-light">
-          <div class="card-body">
-            <h5 class="card-title">{{ workout.name }}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
-              {{ dateToMonthDay(workout.date) }}
-            </h6>
-
-            <p
-              class="card-text my-0"
-              v-for="(exercise, idx) in workout.exercises"
-              :key="idx"
-            >
-              {{ exercise.sets.length }} x
-              {{ exercise.exerciseName }}
-              | Best Set :
-              {{ getBestSetAsString(exercise.sets) }}
-            </p>
-          </div>
-        </div>
-      </div>
+        :workoutData="workout"
+      />
     </div>
 
     <div v-if="noDataInThisDateRange">No Data In This Date Range</div>
-
-    <div>Stats</div>
   </div>
 </template>
 
@@ -177,6 +159,7 @@ import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
+import WorkoutCard from "@/components/WorkoutCard.vue";
 // @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
 
@@ -194,7 +177,7 @@ export default Vue.extend({
       currentlySelectedExercise: "Squat",
       chartOptions: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
         tooltips: {
           callbacks: {},
         },
@@ -219,35 +202,53 @@ export default Vue.extend({
     };
   },
   async created() {
-    if (this.$store.getters.getMyUID !== "")
-      await this.retriveWorkoutData(this.startDate, this.endDate)
-        .then((res) => {
-          this.allWorkouts = res;
-          let convertedData:
-            | Array<ExerciseChartData>
-            | undefined = this.covertWorkoutDataToChartData(res);
-          if (convertedData.length > 0) {
-            this.currentlySelectedExercise = convertedData[0].exerciseName;
-            this.dataCollection = convertedData[0].chartData;
-            this.allExerciseChartData = convertedData;
-            this.dataReady = true;
+    if (this.$store.getters.getMyUID !== "") {
+      let workoutData: Array<Workout> = [];
+      if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
+        workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
+      } else {
+        await this.retriveWorkoutData(this.startDate, this.endDate)
+          .then((res) => {
+            workoutData = res;
+          })
+          .catch((err) => {
+            this.dataReady = false;
+            console.error(err);
+          });
+      }
 
-            this.$store.commit("updateSavedExerciseData", {
-              startDate: this.startDate,
-              endDate: this.endDate,
-              exerciseData: res,
-            });
-          } else {
-            this.noDataInThisDateRange = true;
-          }
-        })
-        .catch((err) => {
-          this.dataReady = false;
-          console.error(err);
+      this.allWorkouts = workoutData;
+      let convertedData:
+        | Array<ExerciseChartData>
+        | undefined = this.covertWorkoutDataToChartData(workoutData);
+      if (convertedData.length > 0) {
+        this.currentlySelectedExercise = convertedData[0].exerciseName;
+        this.dataCollection = convertedData[0].chartData;
+        this.allExerciseChartData = convertedData;
+        this.dataReady = true;
+
+        this.$store.commit("updateSavedWorkoutData", {
+          startDate: this.startDate,
+          endDate: this.endDate,
+          workoutData: workoutData,
         });
-    else this.$router.push("/createAccount");
+      } else {
+        this.noDataInThisDateRange = true;
+      }
+    } else this.$router.push("/createAccount");
   },
   methods: {
+    getMissingDates(startDate: string, endDate: string): Array<string> {
+      let wantedDates: Array<string> = this.generateArrayOfDates(
+        startDate,
+        endDate
+      );
+      let currentDates: Array<string> = this.generateArrayOfDates(
+        this.$store.getters.getSavedWorkoutData.startDate,
+        this.$store.getters.getSavedWorkoutData.endDate
+      );
+      return wantedDates.filter((date) => !currentDates.includes(date));
+    },
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {
@@ -461,6 +462,7 @@ export default Vue.extend({
     // Chart Methods
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
+        // Figureout which exercise clicked from this.allExerciseChartData
         let exerciseIdx = -1;
         this.allExerciseChartData.forEach((exercise, idx) => {
           if (exercise.exerciseName == videoData.exerciseName) {
@@ -476,6 +478,7 @@ export default Vue.extend({
           this.allExerciseChartData[exerciseIdx].videoReady = false;
           this.allExerciseChartData[exerciseIdx].videoLoading = true;
 
+          // This allows multiple videos to be played from one video player
           setTimeout(() => {
             this.allExerciseChartData[exerciseIdx].videoUrl =
               videoData.videoUrl;
@@ -524,14 +527,12 @@ export default Vue.extend({
       });
       return videoUrl;
     },
-    dateToMonthDay(date: string): string {
-      return moment(date).format("MMM DD");
-    },
   },
   components: {
     LineChart,
     FunctionalCalendar,
     Navbar,
+    WorkoutCard,
   },
 });
 </script>

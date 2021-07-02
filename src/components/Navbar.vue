@@ -17,10 +17,16 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav text-end ms-auto">
           <li class="nav-item" v-if="userSignedIn">
             <router-link class="nav-link active" to="/upload"
               >Add Workout</router-link
+            >
+          </li>
+
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link class="nav-link active" to="/history"
+              >History</router-link
             >
           </li>
 
@@ -42,14 +48,9 @@
 
           <!-- Todo: if dropdown toggle is activated, dont show this  -->
           <li class="nav-item" v-if="userSignedIn">
-            <router-link class="navbar-brand" to="/profile"
-              ><img
-                class="img-fluid"
-                v-if="userHasProfileImage && userSignedIn"
-                :src="profileImage"
-                width="45px"
-                height="45px"
-            /></router-link>
+            <router-link class="nav-link" to="/profile"
+              ><i class="bi bi-person-circle"> </i>
+            </router-link>
           </li>
         </ul>
       </div>
@@ -93,6 +94,11 @@ export default Vue.extend({
         store.getters.getUserData.profileImageUrl != "" &&
         store.getters.getUserData.profileImageUrl
       );
+    },
+    onMobile(): boolean {
+      // Bootstrap defined small breakpoint
+      if (window.screen.width < 576) return true;
+      return false;
     },
   },
 });

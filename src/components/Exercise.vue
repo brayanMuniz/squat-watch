@@ -2,60 +2,85 @@
   <div class="form-group">
     <br />
 
-    <div class="row">
-      <div class="col-sm-1">
-        <i class="bi bi-x-circle-fill hoverable" @click="removeExercise"></i>
-      </div>
-      <div class="col-sm-11">
-        <label for="Exercise">Exercise Name: </label>
-        <input
-          class="form-control"
-          type="text"
-          list="exercises"
-          v-model="exerciseData.exerciseName"
-        />
+    <div class="container-fluid">
+      <div class="row mb-1">
+        <div class="col-sm-6">
+          <label for="Exercise">
+            <i
+              class="bi bi-x-circle-fill hoverable"
+              style="font-size: 1rem;"
+              @click="removeExercise"
+            ></i
+            >Exercise Name:
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            list="exercises"
+            v-model="exerciseData.exerciseName"
+          />
 
-        <datalist id="exercises">
-          <option
-            v-for="(exerciseName, idx) in getExerciseSuggestions"
-            :key="idx"
-            :value="exerciseName"
-            >{{ exerciseName }}</option
-          >
-        </datalist>
+          <datalist id="exercises">
+            <option
+              v-for="(exerciseName, idx) in getExerciseSuggestions"
+              :key="idx"
+              :value="exerciseName"
+              >{{ exerciseName }}</option
+            >
+          </datalist>
+        </div>
       </div>
     </div>
 
-    <br />
-
     <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
-    <div v-for="(set, index) in exerciseData.sets" :key="index">
-      <div class="row">
-        <div class="col-sm-1">
-          <i
-            class="bi bi-x-circle-fill hoverable"
-            @click="removeSet(index)"
-          ></i>
-        </div>
+    <div class="container-fluid">
+      <div v-for="(set, index) in exerciseData.sets" :key="index" class="row">
         <div class="col">
-          <label for="Exercise1">Weight </label>
-          <input v-model="set.weight" type="number" class="form-control" />
+          <label for="Exercise1">
+            <i
+              class="bi bi-x-circle-fill hoverable"
+              @click="removeSet(index)"
+            ></i
+            >Weight
+          </label>
+          <input
+            v-model="set.weight"
+            min="0"
+            type="number"
+            class="form-control"
+          />
         </div>
         <div class="col">
           <label for="Exercise1">Reps </label>
-          <input v-model="set.reps" type="number" class="form-control" />
-        </div>
-        <div class="col">
-          <!-- TODO: Add a file icon for adding files -->
           <input
+            v-model="set.reps"
+            min="0"
+            type="number"
+            class="form-control"
+          />
+        </div>
+        <div class="col image-upload">
+          <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">
+            <i
+              class="bi bi-file-check-fill text-success hoverable custom-icon-fontsize"
+            ></i>
+          </label>
+
+          <label :for="returnUniqueId(index)" v-else>
+            <i
+              class="bi bi-file-arrow-up-fill hoverable custom-icon-fontsize my-auto"
+              style="color: cornflowerblue;"
+            ></i>
+          </label>
+
+          <input
+            :id="returnUniqueId(index)"
             ref="myFiles"
             name="file-upload"
             @change="previewFiles($event, index)"
             type="file"
             class="form-control"
-            id="Profile Image"
-            multiple
           />
         </div>
       </div>
@@ -63,9 +88,11 @@
       <br />
     </div>
 
-    <button @click="addNewSet" class="btn btn-info" type="button">
-      <i class="bi bi-plus-circle-fill"></i> Set
-    </button>
+    <div class="container-fluid">
+      <button @click="addNewSet" class="btn btn-info" type="button">
+        <i class="bi bi-plus-circle-fill"></i> Set
+      </button>
+    </div>
   </div>
 </template>
 
@@ -87,6 +114,11 @@ export default Vue.extend({
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
         videoData: Array<any>(), // Todo: update this
       },
+      exerciseId:
+        "_" +
+        Math.random()
+          .toString(36)
+          .substr(2, 9),
     };
   },
   created() {
@@ -124,6 +156,18 @@ export default Vue.extend({
           });
       }
     },
+    doesSetContainVideo(setIdx: number): boolean {
+      let itDoes = false;
+      if (this.exerciseData.sets[setIdx]) {
+        this.exerciseData.videoData.forEach((vidData) => {
+          if (vidData.setVideoIdx === setIdx) itDoes = true;
+        });
+      }
+      return itDoes;
+    },
+    returnUniqueId(setVideoIdx: number) {
+      return `${this.exerciseId}Set:${setVideoIdx}`;
+    },
     addNewSet() {
       let setsLength: number = this.exerciseData.sets.length;
       if (setsLength > 0) {
@@ -147,18 +191,17 @@ export default Vue.extend({
       }
       // remove video data from this.exerciseData
       let videoDataSetIdx = -1;
-      this.exerciseData.videoData.forEach((vidData) => {
-        if (vidData.setVideoIdx == setIdx) {
-          videoDataSetIdx = setIdx;
+      this.exerciseData.videoData.forEach((vidData, vidIdx) => {
+        if (vidData.setVideoIdx === setIdx) {
+          videoDataSetIdx = vidIdx;
         }
       });
 
       if (videoDataSetIdx !== -1) {
-        this.exerciseData.videoData.splice(setIdx, 1);
+        this.exerciseData.videoData.splice(videoDataSetIdx, 1);
       }
     },
   },
-  // ? Might be able to add another watcher for videoUpload and have it emited to the parent with object {setLocation, videoUrl}
   watch: {
     exerciseData: {
       deep: true,
@@ -179,4 +222,16 @@ export default Vue.extend({
 .hoverable {
   cursor: pointer;
 }
+
+.custom-icon-fontsize {
+  font-size: 2rem;
+}
+
+.image-upload > input {
+  display: none;
+}
+
+/* * {
+  outline: 1px solid red;
+} */
 </style>

@@ -8,12 +8,16 @@
           <router-link
             :to="{
               name: 'BrowseUser',
-              params: { userName: user.userName, userData: user },
+              params: {
+                userName: user.userName,
+                userData: user.data,
+                userUID: user.uid,
+              },
             }"
           >
             <img
-              v-if="user.profileImageUrl"
-              :src="user.profileImageUrl"
+              v-if="user.data.profileImageUrl"
+              :src="user.data.profileImageUrl"
               class="card-img-top"
               alt="userProfileImage"
           /></router-link>
@@ -23,13 +27,17 @@
               <router-link
                 :to="{
                   name: 'BrowseUser',
-                  params: { userName: user.userName, userData: user },
+                  params: {
+                    userName: user.userName,
+                    userData: user.data,
+                    userUID: user.uid,
+                  },
                 }"
-                >{{ user.userName }}</router-link
+                >{{ user.data.userName }}</router-link
               >
             </h5>
             <h6 class="card-subtitle mb-2 text-muted text-truncate">
-              {{ user.description }}
+              {{ user.data.description }}
             </h6>
             <p class="card-text"></p>
           </div>
@@ -63,8 +71,10 @@ export default Vue.extend({
         .get()
         .then((res) => {
           res.docs.forEach((doc) => {
-            console.log(doc.data());
-            this.usersData.push(doc.data());
+            this.usersData.push({
+              data: doc.data(),
+              uid: doc.id,
+            });
           });
         });
     },

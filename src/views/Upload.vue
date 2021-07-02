@@ -16,6 +16,7 @@
                         type="text"
                         class="form-control"
                         id="workoutName"
+                        required
                       />
                     </div>
                   </div>
@@ -27,6 +28,7 @@
                         type="date"
                         class="form-control"
                         id="workoutDate"
+                        required
                       />
                     </div>
                   </div>
@@ -178,6 +180,8 @@ export default Vue.extend({
       const myUid: string | undefined = store.getters.getMyUID;
       if (myUid === undefined) {
         alert("You are not signed in.");
+      } else if (this.exercises.length < 1) {
+        alert("Have at least one exercise");
       } else {
         // Date in MM-DD-YYYY
         let formattedDate = moment(this.workoutDate).format("MM-DD-YYYY");

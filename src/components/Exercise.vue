@@ -44,11 +44,21 @@
             ></i
             >Weight
           </label>
-          <input v-model="set.weight" type="number" class="form-control" />
+          <input
+            v-model="set.weight"
+            min="0"
+            type="number"
+            class="form-control"
+          />
         </div>
         <div class="col">
           <label for="Exercise1">Reps </label>
-          <input v-model="set.reps" type="number" class="form-control" />
+          <input
+            v-model="set.reps"
+            min="0"
+            type="number"
+            class="form-control"
+          />
         </div>
         <div class="col image-upload">
           <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">

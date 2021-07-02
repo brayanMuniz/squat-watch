@@ -3,13 +3,18 @@
     <Navbar />
     <form @submit.prevent="makeNewUser" class="container-fluid">
       <div class="row">
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-6 col-lg-3">
           <div class="form-group">
             <label class="form-label" for="userName">User Name</label>
-            <input type="text" class="form-control" v-model.trim="userName" />
+            <input
+              type="text"
+              class="form-control"
+              required
+              v-model.trim="userName"
+            />
           </div>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-6 col-lg-3">
           <div class="form-group">
             <label class="form-label" for="Email">Email address</label>
             <input
@@ -18,10 +23,11 @@
               id="Email"
               aria-describedby="emailHelp"
               v-model.trim="email"
+              required
             />
           </div>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-6 col-lg-3">
           <div class="form-group">
             <label class="form-label" for="Password">Password</label>
             <input
@@ -29,10 +35,11 @@
               type="password"
               class="form-control"
               id="Password"
+              required
             />
           </div>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-6 col-lg-3">
           <label class="form-label" for="visibility">Visibility</label>
 
           <select
@@ -47,19 +54,17 @@
         </div>
       </div>
 
+      <!-- Age, weight, describe yourself -->
       <div class="row">
-        <div class="col-6">
-          <label class="form-label">Current Age </label>
-          <input v-model="age" type="number" class="form-control" />
+        <div class="col-sm-6 col-md-3">
+          <label class="form-label">Age: </label>
+          <input v-model="age" type="number" class="form-control" min="0" />
         </div>
-        <div class="col-6">
-          <label class="form-label">Current Weight (LBS)</label>
-          <input v-model="weight" type="number" class="form-control" />
+        <div class="col-sm-6 col-md-3">
+          <label class="form-label">Weight (LBS):</label>
+          <input v-model="weight" type="number" class="form-control" min="0" />
         </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
+        <div class="col-sm-12 col-md-6">
           <label for="description" class="form-label">Describe Yourself</label>
           <textarea
             class="form-control"
@@ -71,7 +76,7 @@
       </div>
 
       <!--Initial Lifts  -->
-      <div class="form-label">Current Poggers</div>
+      <div class="form-label">Current Poggers:</div>
       <div
         class="form-group"
         v-for="(exercise, index) in initialLiftsData"
@@ -102,11 +107,12 @@
 
           <div class="col-sm-4 row">
             <div class="col">
-              <label class="form-label">Weight</label>
+              <label class="form-label">Weight (LBS)</label>
               <input
                 v-model="exercise.weight"
                 type="number"
                 class="form-control"
+                min="0"
               />
             </div>
 
@@ -116,37 +122,49 @@
                 v-model="exercise.reps"
                 type="number"
                 class="form-control"
+                min="0"
               />
             </div>
           </div>
         </div>
       </div>
+
       <button @click="addNewExercise" class="btn btn-info" type="button">
         Add New Exercise
       </button>
 
-      <div class="row">
-        <div class="col">
-          <div class="form-group">
-            <label for="Starting Amount">Profile Picture :</label>
-            <input
-              ref="upload"
-              name="file-upload"
-              @change="previewFiles"
-              type="file"
-              class="form-control"
-              id="Profile Image"
-            />
-            <img
-              class="img-fluid"
-              v-if="userWantsProfileImage"
-              :src="profileImagePreview"
-              alt="usersProfileImage"
-            />
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <div class="form-group image-upload">
+              <label for="Starting Amount">Profile Picture :</label>
+
+              <label for="Profile Image">
+                <i
+                  class="bi bi-file-arrow-up-fill hoverable custom-icon-fontsize my-auto"
+                  style="color: cornflowerblue;"
+                ></i>
+              </label>
+
+              <input
+                ref="upload"
+                name="file-upload"
+                @change="previewFiles"
+                type="file"
+                class="form-control"
+                id="Profile Image"
+              />
+              <img
+                class="img-fluid"
+                v-if="userWantsProfileImage"
+                :src="profileImagePreview"
+                alt="usersProfileImage"
+              />
+            </div>
           </div>
-        </div>
-        <div class="col-3">
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <div class="col">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
         </div>
       </div>
     </form>
@@ -325,5 +343,8 @@ export default Vue.extend({
 <style scoped>
 .hoverable {
   cursor: pointer;
+}
+.image-upload > input {
+  display: none;
 }
 </style>

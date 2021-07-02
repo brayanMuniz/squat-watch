@@ -1,17 +1,34 @@
 <template>
   <div>
     <Navbar />
-    <div class="row row-cols-1 row-cols-md-4 container-fluid">
-      <div class="col">
-        <div class="card" v-for="(user, idx) in usersData" :key="idx">
-          <img
-            :src="user.profileImageUrl"
-            class="card-img-top"
-            alt="userProfileImage"
-          />
+
+    <div class="row row-cols-sm-1 row-cols-md-3">
+      <div class="col" v-for="(user, idx) in usersData" :key="idx">
+        <div class="card">
+          <router-link
+            :to="{
+              name: 'BrowseUser',
+              params: { userName: user.userName, userData: user },
+            }"
+          >
+            <img
+              v-if="user.profileImageUrl"
+              :src="user.profileImageUrl"
+              class="card-img-top"
+              alt="userProfileImage"
+          /></router-link>
+
           <div class="card-body">
-            <h5 class="card-title">{{ user.userName }}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
+            <h5 class="card-title">
+              <router-link
+                :to="{
+                  name: 'BrowseUser',
+                  params: { userName: user.userName, userData: user },
+                }"
+                >{{ user.userName }}</router-link
+              >
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted text-truncate">
               {{ user.description }}
             </h6>
             <p class="card-text"></p>

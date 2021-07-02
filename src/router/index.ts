@@ -5,6 +5,7 @@ import Upload from "../views/Upload.vue";
 import CreateAccount from "@/views/CreateAccount.vue";
 import SignIn from "@/views/SignIn.vue";
 import Browse from "@/views/Browse.vue";
+import BrowseUser from "@/views/BrowseUser.vue";
 
 Vue.use(VueRouter);
 
@@ -33,6 +34,12 @@ const routes: Array<RouteConfig> = [
     path: "/browse",
     name: "Browse",
     component: Browse,
+  },
+  {
+    path: "/browse/:userName",
+    name: "BrowseUser",
+    component: BrowseUser,
+    props: true
   },
 ];
 

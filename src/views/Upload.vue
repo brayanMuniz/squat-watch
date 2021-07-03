@@ -286,22 +286,14 @@ export default Vue.extend({
           .doc(myUid)
           .collection("exercises");
 
+        // Todo: might have to update this later
         for (let exercise in workout.exercises) {
           let workoutsDone: any = {};
-          workoutsDone[this.workoutDate] = workout.exercises[exercise].sets;
+          workoutsDone[formattedDate] = workout.exercises[exercise].sets;
           let exerciseName: string = workout.exercises[exercise].exerciseName;
-          if (
-            this.userHasExerciseLogged(workout.exercises[exercise].exerciseName)
-          )
-            batch.update(
-              pathToExercisesCollection.doc(exerciseName),
-              workoutsDone
-            );
-          else
-            batch.set(
-              pathToExercisesCollection.doc(exerciseName),
-              workoutsDone
-            );
+          batch.set(pathToExercisesCollection.doc(exerciseName), workoutsDone, {
+            merge: true,
+          });
         }
 
         batch

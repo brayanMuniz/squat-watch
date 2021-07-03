@@ -1,3 +1,4 @@
+import { firebaseApp } from "@/firebase";
 import { Workout } from "@/interfaces/workout.interface";
 import moment from "moment";
 import Vue from "vue";
@@ -73,6 +74,48 @@ export default new Vuex.Store({
       } else state.savedWorkoutData.endDate = newWorkoutData.endDate;
     },
   },
-  actions: {},
+  actions: {
+    async retriveWorkoutData({ commit }, details) {
+      const workoutData: Array<Workout> = [];
+      let error = false;
+      const workoutPath = firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(details.uid)
+        .collection("workouts");
+
+      const workoutConverter = {
+        toFirestore: function(workout: Workout) {
+          return {
+            name: workout.name,
+            date: workout.date,
+            exercises: workout.exercises,
+            length: workout.length,
+          };
+        },
+        fromFireStore: function(doc: any) {
+          const data = doc.data();
+          return new Workout(data.name, doc.id, data.exercises, data.length);
+        },
+      };
+
+      for (const date in details.dates) {
+        await workoutPath
+          .doc(details.dates[date])
+          .get()
+          .then((doc) => {
+            if (doc.exists) {
+              workoutData.push(workoutConverter.fromFireStore(doc));
+            }
+          })
+          .catch((err) => {
+            error = true;
+            console.error(err);
+          });
+      }
+      if (error) return Promise.reject("Problem Getting Data For User");
+      return Promise.resolve(workoutData);
+    },
+  },
   modules: {},
 });

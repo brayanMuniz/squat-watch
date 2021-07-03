@@ -202,12 +202,28 @@ export default Vue.extend({
     };
   },
   async created() {
-    if (this.$store.getters.getMyUID !== "") {
+    if (store.getters.getMyUID !== "") {
+      const myUID: string = store.getters.getMyUID;
       let workoutData: Array<Workout> = [];
       if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
         workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
       } else {
-        await this.retriveWorkoutData(this.startDate, this.endDate)
+        let dates: Array<string> = [];
+        if (this.startDate && this.endDate) {
+          dates = this.generateArrayOfDates(this.startDate, this.endDate);
+        } else {
+          dates = this.generateArrayOfDates(
+            moment()
+              .subtract(1, "week")
+              .format("MM-DD-YYYY"),
+            moment().format("MM-DD-YYYY")
+          );
+        }
+        await store
+          .dispatch("retriveWorkoutData", {
+            dates: dates,
+            uid: myUID,
+          })
           .then((res) => {
             workoutData = res;
           })
@@ -216,7 +232,6 @@ export default Vue.extend({
             console.error(err);
           });
       }
-
       this.allWorkouts = workoutData;
       let convertedData:
         | Array<ExerciseChartData>
@@ -227,7 +242,7 @@ export default Vue.extend({
         this.allExerciseChartData = convertedData;
         this.dataReady = true;
 
-        this.$store.commit("updateSavedWorkoutData", {
+        store.commit("updateSavedWorkoutData", {
           startDate: this.startDate,
           endDate: this.endDate,
           workoutData: workoutData,
@@ -249,6 +264,7 @@ export default Vue.extend({
       );
       return wantedDates.filter((date) => !currentDates.includes(date));
     },
+    // Todo: remove retriveWorkoutData f(x) from here
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {

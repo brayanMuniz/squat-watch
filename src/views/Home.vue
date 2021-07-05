@@ -150,6 +150,7 @@ import Vue from "vue";
 import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import {
+  covertWorkoutDataToChartData,
   ChartWorkingSet,
   ExerciseChartData,
   WorkingSet,
@@ -235,7 +236,7 @@ export default Vue.extend({
       this.allWorkouts = workoutData;
       let convertedData:
         | Array<ExerciseChartData>
-        | undefined = this.covertWorkoutDataToChartData(workoutData);
+        | undefined = covertWorkoutDataToChartData(workoutData);
       if (convertedData.length > 0) {
         this.currentlySelectedExercise = convertedData[0].exerciseName;
         this.dataCollection = convertedData[0].chartData;
@@ -296,7 +297,7 @@ export default Vue.extend({
             .then((res) => {
               let convertedData:
                 | Array<ExerciseChartData>
-                | undefined = this.covertWorkoutDataToChartData(res);
+                | undefined = covertWorkoutDataToChartData(res);
               if (convertedData.length > 0) {
                 let selectedExerciseIdx = -1;
                 convertedData.forEach((data, idx) => {
@@ -405,75 +406,6 @@ export default Vue.extend({
       } else {
         return Promise.reject("Not signed in ");
       }
-    },
-    // Converts every exercise into one set of ChartData obj.
-    covertWorkoutDataToChartData(
-      workoutData: Array<Workout>
-    ): Array<ExerciseChartData> {
-      // helps keep track what exercises i already have an object for
-      let alreadyStartedExercises: Array<string> = [];
-      let allExercises: Array<ExerciseChartData> = [];
-
-      workoutData.forEach((workout) => {
-        workout.exercises.forEach((exercise) => {
-          if (alreadyStartedExercises.includes(exercise.exerciseName)) {
-            allExercises.forEach((exerciseChartData) => {
-              if (exerciseChartData.exerciseName === exercise.exerciseName) {
-                // Configure Chart Data ==
-                // x axis of dates
-                if (exerciseChartData.chartData.labels)
-                  exerciseChartData.chartData.labels.push(workout.date);
-
-                // y axis of one rep max
-                if (exerciseChartData.chartData.datasets) {
-                  if (exerciseChartData.chartData.datasets[0].data)
-                    exerciseChartData.chartData.datasets[0].data.push(
-                      this.findBestOneRepMax(exercise.sets)
-                    );
-                }
-
-                // Cofigures set data ==
-
-                let formattedSets: ChartWorkingSet = {
-                  date: workout.date,
-                  sets: exercise.sets,
-                };
-                exerciseChartData.setsWithDates.push(formattedSets);
-              }
-            });
-          } else {
-            alreadyStartedExercises.push(exercise.exerciseName);
-
-            let convertedDataToChart: ChartData = {
-              labels: [workout.date], // x axis
-              datasets: [
-                {
-                  label: `${exercise.exerciseName} One Rep Max`,
-                  data: [this.findBestOneRepMax(exercise.sets)], // y axis
-                  fill: false,
-                  borderColor: "#0000a5",
-                },
-              ],
-            };
-
-            let formattedSets: ChartWorkingSet = {
-              date: workout.date,
-              sets: exercise.sets,
-            };
-
-            allExercises.push({
-              exerciseName: exercise.exerciseName,
-              chartData: convertedDataToChart,
-              setsWithDates: [formattedSets],
-              videoReady: false,
-              videoUrl: "",
-              videoLoading: false,
-            });
-          }
-        });
-      });
-
-      return allExercises;
     },
     // Chart Methods
     changeVideoFromExercise(videoData: any) {

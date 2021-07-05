@@ -7,6 +7,7 @@ import SignIn from "@/views/SignIn.vue";
 import History from "@/views/History.vue";
 import Browse from "@/views/Browse.vue";
 import BrowseUser from "@/views/BrowseUser.vue";
+import NotFound from "@/views/404.vue";
 
 Vue.use(VueRouter);
 
@@ -45,7 +46,11 @@ const routes: Array<RouteConfig> = [
     path: "/browse/:userName",
     name: "BrowseUser",
     component: BrowseUser,
-    props: true
+    props: true,
+  },
+  {
+    path: "*",
+    component: NotFound,
   },
 ];
 

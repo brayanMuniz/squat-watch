@@ -47,7 +47,7 @@
     <div class="container-fluid">
       <div class="row">
         <div
-          class="col-xxl-6"
+          class="col-xxl-6 border border-1 m-2 rounded bg-light text-dark"
           v-for="exercise in allExerciseChartData"
           :key="exercise.exerciseName"
         >
@@ -151,7 +151,6 @@ import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import {
   covertWorkoutDataToChartData,
-  ChartWorkingSet,
   ExerciseChartData,
   WorkingSet,
   Workout,

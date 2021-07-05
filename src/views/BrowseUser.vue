@@ -4,16 +4,28 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-lg-9">
-          <div class="row container-fluid">
-            <div class="col">@{{ userData.userName }}</div>
-            <div class="col">Search Bar, For Exercise</div>
+          <div
+            class="row container-fluid border border-1 m-2 rounded bg-light text-dark"
+          >
+            <div class="col fw-bold fs-3">@{{ userData.userName }}</div>
+            <!-- <div class="col d-flex">
+              <input
+                class="form-control me-2"
+                type="search"
+                placeholder="Search"
+                aria-label="Search"
+              />
+              <button class="btn btn-outline-success" type="submit">
+                Search
+              </button>
+            </div> -->
           </div>
           <div
-            class="row container-fluid"
+            class="row container-fluid border border-1 m-2 rounded bg-light text-dark"
             v-for="exercise in allExerciseChartData"
             :key="exercise.exerciseName"
           >
-            <div class="col-4">
+            <div class="col-sm-12 col-xl-4">
               <div v-if="dataReady" class="container-fluid">
                 <!-- :options prop needs to be passed in or there will be an error -->
                 <LineChart
@@ -25,7 +37,7 @@
                 />
               </div>
             </div>
-            <div class="col-4">
+            <div class="col-sm-12 col-xl-4">
               <table class="table container-fluid">
                 <thead>
                   <tr>
@@ -60,7 +72,7 @@
             </div>
             <div
               v-if="exercise.videoReady"
-              class="col-4 container-fluid"
+              class="col-sm-12 col-xl-4 container-fluid"
             >
               <div v-if="exercise.videoReady" class="container-fluid">
                 <video
@@ -87,19 +99,28 @@
         </div>
         <div class="col-lg-3">
           <!-- TODO: make image smaller -->
-          <img
-            v-if="userData.profileImageUrl"
-            :src="userData.profileImageUrl"
-            class="card-img-top"
-            alt="userProfileImage"
-          />
-          <div class="row">
-            <div class="col">Age: {{ userData.age }}</div>
-            <div class="col">Weight: {{ userData.weight }}</div>
+          <div class="container-fluid">
+            <div class="card" style="width: 18rem;">
+              <img
+                v-if="userData.profileImageUrl"
+                :src="userData.profileImageUrl"
+                class="card-img-top"
+                alt="userProfileImage"
+              />
+              <div class="card-body">
+                <h5 class="card-title">
+                  <div class="row">
+                    <div class="col">Age: {{ userData.age }}</div>
+                    <div class="col">Weight: {{ userData.weight }}</div>
+                  </div>
+                </h5>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col">
               <WorkoutCard
+                class="my-2"
                 v-for="(workout, idx) in allWorkouts"
                 :key="idx"
                 :workoutData="workout"
@@ -182,8 +203,6 @@ export default Vue.extend({
         console.error(err);
       });
 
-    console.log(workoutData);
-
     let convertedData:
       | Array<ExerciseChartData>
       | undefined = covertWorkoutDataToChartData(workoutData);
@@ -191,7 +210,6 @@ export default Vue.extend({
       this.allExerciseChartData = convertedData;
       this.allWorkouts = workoutData;
       this.dataReady = true;
-      console.log(this.allWorkouts);
     } else {
       this.noDataInThisDateRange = true;
     }

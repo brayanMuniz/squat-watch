@@ -16,7 +16,7 @@
         v-for="(exercise, idx) in cardWorkoutData.exercises"
         :key="idx"
       >
-        <div class="col-8 text-break">
+        <div class="col-8 text-truncate">
           {{ exercise.sets.length }} x {{ exercise.exerciseName }}
         </div>
         <div class="col-4 text-end">

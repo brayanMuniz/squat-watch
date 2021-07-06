@@ -10,7 +10,20 @@
                 <div class="row">
                   <div class="col-sm-6 col-md-4">
                     <div class="form-group">
-                      <label for="Workout Name">Workout Name: </label>
+                      <label for="Workout Name"
+                        >Workout Name:
+                        <i
+                          class="bi bi-journal-plus"
+                          v-if="!userWantsToAddNote"
+                          @click="changeWorkoutNote(false)"
+                        ></i>
+
+                        <i
+                          class="bi bi-journal-minus"
+                          v-if="userWantsToAddNote"
+                          @click="changeWorkoutNote(true)"
+                        ></i
+                      ></label>
                       <input
                         v-model.trim="workoutName"
                         type="text"
@@ -33,7 +46,7 @@
                     </div>
                   </div>
                   <div class="col-sm-12 col-md-4">
-                    <div>
+                    <div v-if="userWantsToAddNote">
                       <label for="workoutNote" class="form-label"
                         >Workout Note:
                       </label>
@@ -168,6 +181,7 @@ export default Vue.extend({
       workoutNote: "",
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       exercises: Array<Exercise>(),
+      userWantsToAddNote: false,
       uploading: false,
       poggersUpload: "0%",
     };
@@ -189,6 +203,12 @@ export default Vue.extend({
           console.log(res.state);
         });
       }
+    },
+    changeWorkoutNote(remove: boolean) {
+      if (remove) {
+        this.userWantsToAddNote = false;
+        this.workoutNote = "";
+      } else this.userWantsToAddNote = true;
     },
     async uploadWorkout() {
       const myUid: string | undefined = store.getters.getMyUID;
@@ -342,7 +362,7 @@ export default Vue.extend({
     addExercise() {
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
-  
+
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 

@@ -40,14 +40,16 @@ export interface ChartWorkingSet {
 export interface Workout {
   name: string;
   date: string;
-  length?: number | undefined;
   exercises: Array<Exercise>;
+  workoutNote?: string;
+  length?: number | undefined;
 }
 
 export interface Exercise {
   exerciseName: string;
   sets: Array<WorkingSet>;
   videoData?: Array<VideoData>;
+  exerciseNote?: string;
 }
 
 export interface VideoData {

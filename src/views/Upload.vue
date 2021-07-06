@@ -8,7 +8,7 @@
             <form @submit.prevent="uploadWorkout">
               <div class="container-fluid">
                 <div class="row">
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
                       <label for="Workout Name">Workout Name: </label>
                       <input
@@ -20,7 +20,7 @@
                       />
                     </div>
                   </div>
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
                       <label for="Workout Name">Date: </label>
                       <input
@@ -30,6 +30,19 @@
                         id="workoutDate"
                         required
                       />
+                    </div>
+                  </div>
+                  <div class="col-sm-12 col-md-4">
+                    <div>
+                      <label for="workoutNote" class="form-label"
+                        >Workout Note:
+                      </label>
+                      <textarea
+                        v-model.trim="workoutNote"
+                        class="form-control"
+                        id="workoutNote"
+                        rows="3"
+                      ></textarea>
                     </div>
                   </div>
                 </div>
@@ -49,7 +62,7 @@
                 <br />
               </div>
 
-              <div class="row">
+              <div class="row mt-2">
                 <div class="col">
                   <button
                     type="button"
@@ -152,6 +165,7 @@ export default Vue.extend({
     return {
       workoutName: "",
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
+      workoutNote: "",
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       exercises: Array<Exercise>(),
       uploading: false,
@@ -198,6 +212,8 @@ export default Vue.extend({
           exercises: this.exercises,
         };
 
+        if (this.workoutNote !== "") workout["workoutNote"] = this.workoutNote;
+
         let addNewExerciseToUserData: Array<string> = [];
 
         // Sets path to document
@@ -213,6 +229,10 @@ export default Vue.extend({
           let exerciseName: string = workout.exercises[exercise].exerciseName;
           if (!this.userHasExerciseLogged(exerciseName))
             addNewExerciseToUserData.push(exerciseName);
+
+          // If note is empty, delete it
+          if (!workout.exercises[exercise].exerciseNote)
+            delete workout.exercises[exercise].exerciseNote;
 
           // Do not upload if the file exceeds the storage of 10 mb
           if (workout.exercises[exercise].videoData) {

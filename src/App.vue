@@ -37,4 +37,7 @@ export default Vue.extend({
 <style lang="scss">
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 @import "~bootstrap/scss/bootstrap";
+.hoverable {
+  cursor: pointer;
+}
 </style>

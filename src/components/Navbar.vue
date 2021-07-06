@@ -16,7 +16,6 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <!-- TODO: make contents go on right side -->
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav text-end ms-auto">
           <li class="nav-item" v-if="userSignedIn">
@@ -36,7 +35,13 @@
           </li>
 
           <li class="nav-item" v-if="userSignedIn">
-            <router-link @click="signOut" class="nav-link" to="/"
+            <router-link class="nav-link active" to="/browse"
+              >Browse</router-link
+            >
+          </li>
+
+          <li class="nav-item" v-if="userSignedIn">
+            <router-link @click="signOut" class="nav-link active" to="/"
               >Sign Out</router-link
             >
           </li>

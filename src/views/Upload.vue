@@ -306,12 +306,21 @@ export default Vue.extend({
           .doc(myUid)
           .collection("exercises");
 
-        // Todo: might have to update this later
         for (let exercise in workout.exercises) {
-          let workoutsDone: any = {};
-          workoutsDone[formattedDate] = workout.exercises[exercise].sets;
+          let data: any = {};
+          data[formattedDate] = {
+            setsDone: workout.exercises[exercise].sets,
+            workoutName: this.workoutName,
+            exerciseNote: "",
+          };
+
+          if (workout.exercises[exercise].exerciseNote)
+            data[formattedDate]["exerciseNote"] =
+              workout.exercises[exercise].exerciseNote;
+          else delete data[formattedDate]["exerciseNote"];
+
           let exerciseName: string = workout.exercises[exercise].exerciseName;
-          batch.set(pathToExercisesCollection.doc(exerciseName), workoutsDone, {
+          batch.set(pathToExercisesCollection.doc(exerciseName), data, {
             merge: true,
           });
         }
@@ -333,6 +342,7 @@ export default Vue.extend({
     addExercise() {
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
+  
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 

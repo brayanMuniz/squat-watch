@@ -12,6 +12,18 @@
               @click="removeExercise"
             ></i
             >Exercise Name:
+
+            <i
+              class="bi bi-journal-plus"
+              v-if="!userWantsToAddNote"
+              @click="changeExerciseNote(false)"
+            ></i>
+
+            <i
+              class="bi bi-journal-minus"
+              v-if="userWantsToAddNote"
+              @click="changeExerciseNote(true)"
+            ></i>
           </label>
           <input
             class="form-control"
@@ -28,6 +40,16 @@
               >{{ exerciseName }}</option
             >
           </datalist>
+
+          <div v-if="userWantsToAddNote">
+            <label for="workoutNote" class="form-label">Exercise Note: </label>
+            <textarea
+              v-model.trim="exerciseData.exerciseNote"
+              class="form-control"
+              id="workoutNote"
+              rows="3"
+            ></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -112,8 +134,10 @@ export default Vue.extend({
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
+        exerciseNote: "",
         videoData: Array<any>(), // Todo: update this
       },
+      userWantsToAddNote: false,
       exerciseId:
         "_" +
         Math.random()
@@ -201,6 +225,12 @@ export default Vue.extend({
         this.exerciseData.videoData.splice(videoDataSetIdx, 1);
       }
     },
+    changeExerciseNote(remove: boolean) {
+      if (remove) {
+        this.userWantsToAddNote = false;
+        this.exerciseData.exerciseNote = "";
+      } else this.userWantsToAddNote = true;
+    },
   },
   watch: {
     exerciseData: {
@@ -219,10 +249,6 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.hoverable {
-  cursor: pointer;
-}
-
 .custom-icon-fontsize {
   font-size: 2rem;
 }

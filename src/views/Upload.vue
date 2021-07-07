@@ -8,9 +8,22 @@
             <form @submit.prevent="uploadWorkout">
               <div class="container-fluid">
                 <div class="row">
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
-                      <label for="Workout Name">Workout Name: </label>
+                      <label for="Workout Name"
+                        >Workout Name:
+                        <i
+                          class="bi bi-journal-plus"
+                          v-if="!userWantsToAddNote"
+                          @click="changeWorkoutNote(false)"
+                        ></i>
+
+                        <i
+                          class="bi bi-journal-minus"
+                          v-if="userWantsToAddNote"
+                          @click="changeWorkoutNote(true)"
+                        ></i
+                      ></label>
                       <input
                         v-model.trim="workoutName"
                         type="text"
@@ -20,7 +33,7 @@
                       />
                     </div>
                   </div>
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
                       <label for="Workout Name">Date: </label>
                       <input
@@ -30,6 +43,19 @@
                         id="workoutDate"
                         required
                       />
+                    </div>
+                  </div>
+                  <div class="col-sm-12 col-md-4">
+                    <div v-if="userWantsToAddNote">
+                      <label for="workoutNote" class="form-label"
+                        >Workout Note:
+                      </label>
+                      <textarea
+                        v-model.trim="workoutNote"
+                        class="form-control"
+                        id="workoutNote"
+                        rows="3"
+                      ></textarea>
                     </div>
                   </div>
                 </div>
@@ -49,7 +75,7 @@
                 <br />
               </div>
 
-              <div class="row">
+              <div class="row mt-2">
                 <div class="col">
                   <button
                     type="button"
@@ -152,8 +178,10 @@ export default Vue.extend({
     return {
       workoutName: "",
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
+      workoutNote: "",
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       exercises: Array<Exercise>(),
+      userWantsToAddNote: false,
       uploading: false,
       poggersUpload: "0%",
     };
@@ -175,6 +203,12 @@ export default Vue.extend({
           console.log(res.state);
         });
       }
+    },
+    changeWorkoutNote(remove: boolean) {
+      if (remove) {
+        this.userWantsToAddNote = false;
+        this.workoutNote = "";
+      } else this.userWantsToAddNote = true;
     },
     async uploadWorkout() {
       const myUid: string | undefined = store.getters.getMyUID;
@@ -198,6 +232,8 @@ export default Vue.extend({
           exercises: this.exercises,
         };
 
+        if (this.workoutNote !== "") workout["workoutNote"] = this.workoutNote;
+
         let addNewExerciseToUserData: Array<string> = [];
 
         // Sets path to document
@@ -213,6 +249,10 @@ export default Vue.extend({
           let exerciseName: string = workout.exercises[exercise].exerciseName;
           if (!this.userHasExerciseLogged(exerciseName))
             addNewExerciseToUserData.push(exerciseName);
+
+          // If note is empty, delete it
+          if (!workout.exercises[exercise].exerciseNote)
+            delete workout.exercises[exercise].exerciseNote;
 
           // Do not upload if the file exceeds the storage of 10 mb
           if (workout.exercises[exercise].videoData) {
@@ -286,12 +326,21 @@ export default Vue.extend({
           .doc(myUid)
           .collection("exercises");
 
-        // Todo: might have to update this later
         for (let exercise in workout.exercises) {
-          let workoutsDone: any = {};
-          workoutsDone[formattedDate] = workout.exercises[exercise].sets;
+          let data: any = {};
+          data[formattedDate] = {
+            setsDone: workout.exercises[exercise].sets,
+            workoutName: this.workoutName,
+            exerciseNote: "",
+          };
+
+          if (workout.exercises[exercise].exerciseNote)
+            data[formattedDate]["exerciseNote"] =
+              workout.exercises[exercise].exerciseNote;
+          else delete data[formattedDate]["exerciseNote"];
+
           let exerciseName: string = workout.exercises[exercise].exerciseName;
-          batch.set(pathToExercisesCollection.doc(exerciseName), workoutsDone, {
+          batch.set(pathToExercisesCollection.doc(exerciseName), data, {
             merge: true,
           });
         }
@@ -313,6 +362,7 @@ export default Vue.extend({
     addExercise() {
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
+
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 

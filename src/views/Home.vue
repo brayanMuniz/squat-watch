@@ -43,6 +43,19 @@
       </div>
     </div>
 
+    <!-- Workout plan -->
+    <div>
+      <h4>Workout Plan:</h4>
+      <div class="row" v-if="userWorkoutPlan.length > 0">
+        <div class="col"></div>
+      </div>
+      <div v-else>
+        <button type="button" class="btn btn-primary">
+          Create A Workout Plan
+        </button>
+      </div>
+    </div>
+
     <!-- Workout Chart, Table and video. -->
     <div class="container-fluid">
       <div class="row">
@@ -52,7 +65,7 @@
           :key="exercise.exerciseName"
         >
           <div class="row">
-            <div class="col-lg-5 col-sm-12">
+            <div class="col-lg-4 col-sm-12">
               <div v-if="dataReady" class="container-fluid">
                 <!-- :options prop needs to be passed in or there will be an error -->
                 <LineChart
@@ -65,7 +78,7 @@
               </div>
             </div>
             <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-            <div class="col-lg-3 col-sm-12">
+            <div class="col-lg-4 col-sm-12">
               <table class="table container-fluid">
                 <thead>
                   <tr>
@@ -124,6 +137,7 @@
                 <span class="visually-hidden">Loading...</span>
               </div>
             </div>
+            <div v-else class="col-lg-4 col-sm-12"></div>
           </div>
         </div>
       </div>
@@ -147,7 +161,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import {
   covertWorkoutDataToChartData,
@@ -167,8 +180,6 @@ export default Vue.extend({
   name: "Home",
   data() {
     return {
-      videoReady: false,
-      videoUrl: "",
       dataReady: false,
       dataCollection: Object() as ChartData,
       allWorkouts: Array<Workout>(),
@@ -199,10 +210,12 @@ export default Vue.extend({
         // markedDates: ["6/15/2021"],
       },
       pickedDates: Array<string>(),
+      userWorkoutPlan: Array<Workout>(),
     };
   },
   async created() {
     if (store.getters.getMyUID !== "") {
+      // Get Initial Workout Data For Week
       const myUID: string = store.getters.getMyUID;
       let workoutData: Array<Workout> = [];
       if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
@@ -250,6 +263,8 @@ export default Vue.extend({
       } else {
         this.noDataInThisDateRange = true;
       }
+
+      console.log(store.getters.getUserData);
     } else this.$router.push("/createAccount");
   },
   methods: {
@@ -264,7 +279,6 @@ export default Vue.extend({
       );
       return wantedDates.filter((date) => !currentDates.includes(date));
     },
-    // Todo: remove retriveWorkoutData f(x) from here
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {
@@ -291,8 +305,16 @@ export default Vue.extend({
           }
 
           console.log(this.startDate, this.endDate);
+          let dates: Array<string> = this.generateArrayOfDates(
+            this.startDate,
+            this.endDate
+          );
 
-          await this.retriveWorkoutData(this.startDate, this.endDate)
+          await store
+            .dispatch("retriveWorkoutData", {
+              dates: dates,
+              uid: store.getters.getMyUID,
+            })
             .then((res) => {
               let convertedData:
                 | Array<ExerciseChartData>
@@ -341,71 +363,7 @@ export default Vue.extend({
       }
       return dates;
     },
-    async retriveWorkoutData(startDate?: string, endDate?: string) {
-      let dates: Array<string> = [];
-      let workoutData: Array<Workout> = [];
-      let error = false;
 
-      // if startDate not provided, gets data from one week ago to now
-      if (startDate && endDate) {
-        dates = this.generateArrayOfDates(startDate, endDate);
-      } else {
-        dates = this.generateArrayOfDates(
-          moment()
-            .subtract(1, "week")
-            .format("MM-DD-YYYY"),
-          moment().format("MM-DD-YYYY")
-        );
-      }
-
-      const myUID: string | undefined = store.getters.getMyUID;
-      if (myUID !== undefined) {
-        let workoutPath = firebaseApp
-          .firestore()
-          .collection("users")
-          .doc(myUID)
-          .collection("workouts");
-
-        // ? Do i place custom workout object in workout interface or make a new file for it ?
-        let workoutConverter = {
-          toFirestore: function(workout: Workout) {
-            return {
-              name: workout.name,
-              date: workout.date,
-              exercises: workout.exercises,
-              length: workout.length,
-            };
-          },
-          fromFireStore: function(doc: any) {
-            const data = doc.data();
-            return new Workout(data.name, doc.id, data.exercises, data.length);
-          },
-        };
-
-        // using for ... in instead of forEach becasue for of will use await properly
-        for (const date in dates) {
-          await workoutPath
-            .doc(dates[date])
-            .get()
-            .then((doc) => {
-              if (doc.exists) {
-                workoutData.push(workoutConverter.fromFireStore(doc));
-              }
-            })
-            .catch((err) => {
-              console.error(err);
-            });
-        }
-
-        if (error) {
-          return Promise.reject("Error");
-        } else {
-          return Promise.resolve(workoutData);
-        }
-      } else {
-        return Promise.reject("Not signed in ");
-      }
-    },
     // Chart Methods
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
@@ -438,6 +396,7 @@ export default Vue.extend({
         }
       }
     },
+
     // One Rep Max calculations ===============
     getBestSetAsString(sets: Array<WorkingSet>): string {
       let bestSet = `${sets[0].weight} x ${sets[0].reps}`;

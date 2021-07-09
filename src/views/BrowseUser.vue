@@ -144,6 +144,7 @@ import {
   getBestSetAsString,
   findBestOneRepMax,
 } from "@/interfaces/workout.interface";
+import { generateArrayOfDates } from "@/interfaces/dates.interface";
 import WorkoutCard from "@/components/WorkoutCard.vue";
 import store from "@/store";
 import moment from "moment";
@@ -180,9 +181,9 @@ export default Vue.extend({
   async created() {
     let dates: Array<string> = [];
     if (this.startDate && this.endDate) {
-      dates = this.generateArrayOfDates(this.startDate, this.endDate);
+      dates = generateArrayOfDates(this.startDate, this.endDate);
     } else {
-      dates = this.generateArrayOfDates(
+      dates = generateArrayOfDates(
         moment()
           .subtract(1, "week")
           .format("MM-DD-YYYY"),
@@ -217,22 +218,6 @@ export default Vue.extend({
     }
   },
   methods: {
-    generateArrayOfDates(startDate: string, endDate: string): Array<string> {
-      let dates: Array<string> = [];
-      let startDateMoment = moment(startDate);
-      let endDateMoment = moment(endDate);
-
-      // With +1 it will include the day of
-      const diffInDays: number =
-        endDateMoment.diff(startDateMoment, "days") + 1;
-
-      // Populates array with dates
-      for (let i = 0; i < diffInDays; i++) {
-        let calculatedDay = moment(startDate).add(i, "days");
-        dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
-      }
-      return dates;
-    },
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
         // Figureout which exercise clicked from this.allExerciseChartData

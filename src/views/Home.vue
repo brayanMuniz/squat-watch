@@ -170,6 +170,7 @@ import {
   getBestSetAsString,
   findBestOneRepMax,
 } from "@/interfaces/workout.interface";
+import { generateArrayOfDates } from "@/interfaces/dates.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
@@ -225,9 +226,9 @@ export default Vue.extend({
       } else {
         let dates: Array<string> = [];
         if (this.startDate && this.endDate) {
-          dates = this.generateArrayOfDates(this.startDate, this.endDate);
+          dates = generateArrayOfDates(this.startDate, this.endDate);
         } else {
-          dates = this.generateArrayOfDates(
+          dates = generateArrayOfDates(
             moment()
               .subtract(1, "week")
               .format("MM-DD-YYYY"),
@@ -271,11 +272,11 @@ export default Vue.extend({
   },
   methods: {
     getMissingDates(startDate: string, endDate: string): Array<string> {
-      let wantedDates: Array<string> = this.generateArrayOfDates(
+      let wantedDates: Array<string> = generateArrayOfDates(
         startDate,
         endDate
       );
-      let currentDates: Array<string> = this.generateArrayOfDates(
+      let currentDates: Array<string> = generateArrayOfDates(
         this.$store.getters.getSavedWorkoutData.startDate,
         this.$store.getters.getSavedWorkoutData.endDate
       );
@@ -307,7 +308,7 @@ export default Vue.extend({
           }
 
           console.log(this.startDate, this.endDate);
-          let dates: Array<string> = this.generateArrayOfDates(
+          let dates: Array<string> = generateArrayOfDates(
             this.startDate,
             this.endDate
           );
@@ -349,22 +350,7 @@ export default Vue.extend({
         }
       }
     },
-    generateArrayOfDates(startDate: string, endDate: string): Array<string> {
-      let dates: Array<string> = [];
-      let startDateMoment = moment(startDate);
-      let endDateMoment = moment(endDate);
-
-      // With +1 it will include the day of
-      const diffInDays: number =
-        endDateMoment.diff(startDateMoment, "days") + 1;
-
-      // Populates array with dates
-      for (let i = 0; i < diffInDays; i++) {
-        let calculatedDay = moment(startDate).add(i, "days");
-        dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
-      }
-      return dates;
-    },
+    
 
     // Chart Methods
     changeVideoFromExercise(videoData: any) {

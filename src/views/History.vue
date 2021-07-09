@@ -19,6 +19,7 @@
 import Vue from "vue";
 import moment from "moment";
 import WorkoutCard from "@/components/WorkoutCard.vue";
+import { generateArrayOfDates } from "@/interfaces/dates.interface";
 import Navbar from "@/components/Navbar.vue";
 import store from "@/store";
 export default Vue.extend({
@@ -52,31 +53,12 @@ export default Vue.extend({
   },
   methods: {
     getMissingDates(startDate: string, endDate: string): Array<string> {
-      let wantedDates: Array<string> = this.generateArrayOfDates(
-        startDate,
-        endDate
-      );
-      let currentDates: Array<string> = this.generateArrayOfDates(
+      let wantedDates: Array<string> = generateArrayOfDates(startDate, endDate);
+      let currentDates: Array<string> = generateArrayOfDates(
         this.$store.getters.getSavedWorkoutData.startDate,
         this.$store.getters.getSavedWorkoutData.endDate
       );
       return wantedDates.filter((date) => !currentDates.includes(date));
-    },
-    generateArrayOfDates(startDate: string, endDate: string): Array<string> {
-      let dates: Array<string> = [];
-      let startDateMoment = moment(startDate);
-      let endDateMoment = moment(endDate);
-
-      // With +1 it will include the day of
-      const diffInDays: number =
-        endDateMoment.diff(startDateMoment, "days") + 1;
-
-      // Populates array with dates
-      for (let i = 0; i < diffInDays; i++) {
-        let calculatedDay = moment(startDate).add(i, "days");
-        dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
-      }
-      return dates;
     },
   },
 

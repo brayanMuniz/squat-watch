@@ -170,7 +170,10 @@ import {
   getBestSetAsString,
   findBestOneRepMax,
 } from "@/interfaces/workout.interface";
-import { generateArrayOfDates } from "@/interfaces/dates.interface";
+import {
+  generateArrayOfDates,
+  getMissingDates,
+} from "@/interfaces/dates.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
 import LineChart from "@/components/LineChart";
@@ -221,7 +224,7 @@ export default Vue.extend({
       // Get Initial Workout Data For Week
       const myUID: string = store.getters.getMyUID;
       let workoutData: Array<Workout> = [];
-      if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
+      if (getMissingDates(this.startDate, this.endDate).length === 0) {
         workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
       } else {
         let dates: Array<string> = [];
@@ -271,17 +274,6 @@ export default Vue.extend({
     } else this.$router.push("/createAccount");
   },
   methods: {
-    getMissingDates(startDate: string, endDate: string): Array<string> {
-      let wantedDates: Array<string> = generateArrayOfDates(
-        startDate,
-        endDate
-      );
-      let currentDates: Array<string> = generateArrayOfDates(
-        this.$store.getters.getSavedWorkoutData.startDate,
-        this.$store.getters.getSavedWorkoutData.endDate
-      );
-      return wantedDates.filter((date) => !currentDates.includes(date));
-    },
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {
@@ -350,8 +342,6 @@ export default Vue.extend({
         }
       }
     },
-    
-
     // Chart Methods
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {

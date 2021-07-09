@@ -19,7 +19,7 @@
 import Vue from "vue";
 import moment from "moment";
 import WorkoutCard from "@/components/WorkoutCard.vue";
-import { generateArrayOfDates } from "@/interfaces/dates.interface";
+import { getMissingDates } from "@/interfaces/dates.interface";
 import Navbar from "@/components/Navbar.vue";
 import store from "@/store";
 export default Vue.extend({
@@ -31,12 +31,11 @@ export default Vue.extend({
   },
   async created() {
     this.historyOfWorkouts = store.getters.getSavedWorkoutData.workoutData;
-    let dates: Array<string> = this.getMissingDates(
-      moment()
-        .subtract(1, "month")
-        .format("MM-DD-YYYY"),
-      moment().format("MM-DD-YYYY")
-    );
+    const oneMonthAgo: string = moment()
+      .subtract(1, "month")
+      .format("MM-DD-YYYY");
+    const today: string = moment().format("MM-DD-YYYY");
+    let dates: Array<string> = getMissingDates(oneMonthAgo, today);
 
     await store
       .dispatch("retriveWorkoutData", {
@@ -51,17 +50,6 @@ export default Vue.extend({
       });
     console.log(store.getters.getSavedWorkoutData);
   },
-  methods: {
-    getMissingDates(startDate: string, endDate: string): Array<string> {
-      let wantedDates: Array<string> = generateArrayOfDates(startDate, endDate);
-      let currentDates: Array<string> = generateArrayOfDates(
-        this.$store.getters.getSavedWorkoutData.startDate,
-        this.$store.getters.getSavedWorkoutData.endDate
-      );
-      return wantedDates.filter((date) => !currentDates.includes(date));
-    },
-  },
-
   components: {
     WorkoutCard,
     Navbar,

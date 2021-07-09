@@ -1,3 +1,4 @@
+import store from "@/store";
 import moment from "moment";
 // Generates a list of dates given a startDate and an endDate
 export function generateArrayOfDates(
@@ -17,4 +18,17 @@ export function generateArrayOfDates(
     dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
   }
   return dates;
+}
+// Given a range of dates, wantedDates, figure out which dates you do not have already stored
+// in the store.
+export function getMissingDates(
+  startDate: string,
+  endDate: string
+): Array<string> {
+  const wantedDates: Array<string> = generateArrayOfDates(startDate, endDate);
+  const currentDates: Array<string> = generateArrayOfDates(
+    store.getters.getSavedWorkoutData.startDate,
+    store.getters.getSavedWorkoutData.endDate
+  );
+  return wantedDates.filter((date) => !currentDates.includes(date));
 }

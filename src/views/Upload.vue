@@ -168,6 +168,7 @@ import {
   VideoData,
   WorkingSet,
   Workout,
+  calculateOneRepMax,
 } from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
@@ -401,20 +402,18 @@ export default Vue.extend({
         isLogged = true;
       return isLogged;
     },
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30));
-    },
+
     getBestSetAsString(sets: Array<WorkingSet>): string {
       let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
+      let bestSetCalculated: number = calculateOneRepMax(
         sets[0].weight,
         sets[0].reps
       );
 
       sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+        if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
           bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
+          bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
         }
       });
       return bestSet;

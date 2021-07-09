@@ -132,6 +132,11 @@ export function covertWorkoutDataToChartData(
   return allExercises;
 }
 
+// Brzycki formula weight / ( 1.0278 – 0.0278 × reps )
+export function calculateOneRepMax(weight: number, reps: number): number {
+  return Math.round(weight / (1.0278 - 0.0278 * reps));
+}
+
 export function findBestOneRepMax(sets: Array<WorkingSet>): number {
   let bestOneRepMax = 0;
   sets.forEach((set) => {

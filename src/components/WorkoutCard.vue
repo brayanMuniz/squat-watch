@@ -35,7 +35,11 @@
 <script lang="ts">
 import Vue from "vue";
 import moment from "moment";
-import { Workout, WorkingSet } from "@/interfaces/workout.interface";
+import {
+  Workout,
+  WorkingSet,
+  calculateOneRepMax,
+} from "@/interfaces/workout.interface";
 
 export default Vue.extend({
   props: {
@@ -56,20 +60,17 @@ export default Vue.extend({
     this.cardWorkoutData = this.workoutData;
   },
   methods: {
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30));
-    },
     getBestSetAsString(sets: Array<WorkingSet>): string {
       let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
+      let bestSetCalculated: number = calculateOneRepMax(
         sets[0].weight,
         sets[0].reps
       );
 
       sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+        if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
           bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
+          bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
         }
       });
       return bestSet;

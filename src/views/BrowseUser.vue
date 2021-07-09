@@ -141,6 +141,7 @@ import {
   ExerciseChartData,
   covertWorkoutDataToChartData,
   WorkingSet,
+  calculateOneRepMax,
 } from "@/interfaces/workout.interface";
 import WorkoutCard from "@/components/WorkoutCard.vue";
 import store from "@/store";
@@ -231,10 +232,6 @@ export default Vue.extend({
       }
       return dates;
     },
-    // Todo: move this to Exercise interface
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30)); // Todo Figure out wich one rep max formuala is the best
-    },
     changeVideoFromExercise(videoData: any) {
       if (videoData.exerciseName) {
         // Figureout which exercise clicked from this.allExerciseChartData
@@ -268,15 +265,15 @@ export default Vue.extend({
     },
     getBestSetAsString(sets: Array<WorkingSet>): string {
       let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
+      let bestSetCalculated: number = calculateOneRepMax(
         sets[0].weight,
         sets[0].reps
       );
 
       sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+        if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
           bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
+          bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
         }
       });
       return bestSet;
@@ -284,7 +281,7 @@ export default Vue.extend({
     findBestOneRepMax(sets: Array<WorkingSet>): number {
       let bestOneRepMax = 0;
       sets.forEach((set) => {
-        let setOneRepMax = this.calculateOneRepMax(set.weight, set.reps);
+        let setOneRepMax = calculateOneRepMax(set.weight, set.reps);
         if (setOneRepMax > bestOneRepMax) {
           bestOneRepMax = setOneRepMax;
         }

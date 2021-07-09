@@ -38,7 +38,7 @@ import moment from "moment";
 import {
   Workout,
   WorkingSet,
-  calculateOneRepMax,
+  getBestSetAsString,
 } from "@/interfaces/workout.interface";
 
 export default Vue.extend({
@@ -61,19 +61,7 @@ export default Vue.extend({
   },
   methods: {
     getBestSetAsString(sets: Array<WorkingSet>): string {
-      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = calculateOneRepMax(
-        sets[0].weight,
-        sets[0].reps
-      );
-
-      sets.forEach((set) => {
-        if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
-          bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
-        }
-      });
-      return bestSet;
+      return getBestSetAsString(sets);
     },
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");

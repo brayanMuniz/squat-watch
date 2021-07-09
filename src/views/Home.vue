@@ -168,6 +168,7 @@ import {
   WorkingSet,
   Workout,
   calculateOneRepMax,
+  getBestSetAsString,
 } from "@/interfaces/workout.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
@@ -400,19 +401,7 @@ export default Vue.extend({
 
     // One Rep Max calculations ===============
     getBestSetAsString(sets: Array<WorkingSet>): string {
-      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = calculateOneRepMax(
-        sets[0].weight,
-        sets[0].reps
-      );
-
-      sets.forEach((set) => {
-        if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
-          bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
-        }
-      });
-      return bestSet;
+      return getBestSetAsString(sets);
     },
     findBestOneRepMax(sets: Array<WorkingSet>): number {
       let bestOneRepMax = 0;

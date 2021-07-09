@@ -63,6 +63,7 @@ export interface WorkingSet {
   videoUrl?: string;
 }
 
+// Converts An array of workout data into ExerciseChartData
 export function covertWorkoutDataToChartData(
   workoutData: Array<Workout>
 ): Array<ExerciseChartData> {
@@ -137,6 +138,7 @@ export function calculateOneRepMax(weight: number, reps: number): number {
   return Math.round(weight / (1.0278 - 0.0278 * reps));
 }
 
+// Finds best one rep max in a array of working sets
 export function findBestOneRepMax(sets: Array<WorkingSet>): number {
   let bestOneRepMax = 0;
   sets.forEach((set) => {
@@ -146,4 +148,22 @@ export function findBestOneRepMax(sets: Array<WorkingSet>): number {
     }
   });
   return bestOneRepMax;
+}
+
+// Given An array of working sets, find the best set, calculated by one rep max, 
+// And return best set as "weight x reps"
+export function getBestSetAsString(sets: Array<WorkingSet>): string {
+  let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
+  let bestSetCalculated: number = calculateOneRepMax(
+    sets[0].weight,
+    sets[0].reps
+  );
+
+  sets.forEach((set) => {
+    if (calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
+      bestSet = `${set.weight} x ${set.reps}`;
+      bestSetCalculated = calculateOneRepMax(set.weight, set.reps);
+    }
+  });
+  return bestSet;
 }

@@ -167,8 +167,8 @@ import {
   ExerciseChartData,
   WorkingSet,
   Workout,
-  calculateOneRepMax,
   getBestSetAsString,
+  findBestOneRepMax,
 } from "@/interfaces/workout.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
@@ -404,14 +404,7 @@ export default Vue.extend({
       return getBestSetAsString(sets);
     },
     findBestOneRepMax(sets: Array<WorkingSet>): number {
-      let bestOneRepMax = 0;
-      sets.forEach((set) => {
-        let setOneRepMax = calculateOneRepMax(set.weight, set.reps);
-        if (setOneRepMax > bestOneRepMax) {
-          bestOneRepMax = setOneRepMax;
-        }
-      });
-      return bestOneRepMax;
+      return findBestOneRepMax(sets);
     },
     getVideoUrlFromSets(sets: Array<WorkingSet>): string {
       let videoUrl = "";

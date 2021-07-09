@@ -181,6 +181,7 @@ import Navbar from "@/components/Navbar.vue";
 import WorkoutCard from "@/components/WorkoutCard.vue";
 // @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
+import router from "@/router";
 
 export default Vue.extend({
   name: "Home",
@@ -225,7 +226,7 @@ export default Vue.extend({
       const myUID: string = store.getters.getMyUID;
       let workoutData: Array<Workout> = [];
       if (getMissingDates(this.startDate, this.endDate).length === 0) {
-        workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
+        workoutData = store.getters.getSavedWorkoutData.workoutData;
       } else {
         let dates: Array<string> = [];
         if (this.startDate && this.endDate) {
@@ -271,7 +272,7 @@ export default Vue.extend({
       }
 
       console.log(store.getters.getUserData);
-    } else this.$router.push("/createAccount");
+    } else router.push("/createAccount");
   },
   methods: {
     async getDateRange(event: any) {

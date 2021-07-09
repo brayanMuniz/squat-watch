@@ -19,6 +19,7 @@ export function generateArrayOfDates(
   }
   return dates;
 }
+
 // Given a range of dates, wantedDates, figure out which dates you do not have already stored
 // in the store.
 export function getMissingDates(

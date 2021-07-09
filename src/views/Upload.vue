@@ -173,6 +173,7 @@ import {
 import moment from "moment";
 import store from "@/store";
 import Navbar from "@/components/Navbar.vue";
+import router from "@/router";
 
 export default Vue.extend({
   data() {
@@ -189,7 +190,7 @@ export default Vue.extend({
   },
   async mounted() {
     if (store.getters.getMyUID === undefined) {
-      this.$router.push("/");
+      router.push("/");
     }
   },
   methods: {
@@ -307,7 +308,7 @@ export default Vue.extend({
 
         // Update user doc of what exercises user does
         if (addNewExerciseToUserData.length > 0) {
-          let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
+          let newExercises: Array<string> = store.getters.getUserData.exercises.concat(
             addNewExerciseToUserData
           );
           const userDataDoc = firebaseApp
@@ -363,7 +364,6 @@ export default Vue.extend({
     addExercise() {
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
-
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 
@@ -398,7 +398,7 @@ export default Vue.extend({
     },
     userHasExerciseLogged(exerciseName: string): boolean {
       let isLogged = false;
-      if (this.$store.getters.getUserData.exercises.includes(exerciseName))
+      if (store.getters.getUserData.exercises.includes(exerciseName))
         isLogged = true;
       return isLogged;
     },
@@ -411,7 +411,7 @@ export default Vue.extend({
   },
   computed: {
     userPreviousWorkouts() {
-      return this.$store.getters.getSavedWorkoutData;
+      return store.getters.getSavedWorkoutData;
     },
   },
   components: {

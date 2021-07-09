@@ -120,6 +120,7 @@
 
 <script lang="ts">
 import { Exercise } from "@/interfaces/workout.interface";
+import store from "@/store";
 import Vue from "vue";
 
 export default Vue.extend({
@@ -242,7 +243,7 @@ export default Vue.extend({
   },
   computed: {
     getExerciseSuggestions() {
-      return this.$store.getters.getUserData.exercises;
+      return store.getters.getUserData.exercises;
     },
   },
 });

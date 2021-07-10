@@ -43,8 +43,8 @@ export default Vue.extend({
     };
   },
   methods: {
-    signInUser() {
-      firebaseApp
+    async signInUser() {
+      await firebaseApp
         .auth()
         .signInWithEmailAndPassword(this.email, this.password)
         .then((res) => {

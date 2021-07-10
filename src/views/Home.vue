@@ -56,91 +56,13 @@
       </div>
     </div>
 
-    <!-- Workout Chart, Table and video. -->
-    <div class="container-fluid">
-      <div class="row">
-        <div
-          class="col-xxl-6 border border-1 m-2 rounded bg-light text-dark"
-          v-for="exercise in allExerciseChartData"
-          :key="exercise.exerciseName"
-        >
-          <div class="row">
-            <div class="col-lg-4 col-sm-12">
-              <div v-if="dataReady" class="container-fluid">
-                <!-- :options prop needs to be passed in or there will be an error -->
-                <LineChart
-                  :chartData="exercise.chartData"
-                  :options="chartOptions"
-                  :workingSets="exercise.setsWithDates"
-                  :exerciseName="exercise.exerciseName"
-                  v-on:clickedPoint="changeVideoFromExercise($event)"
-                />
-              </div>
-            </div>
-            <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-            <div class="col-lg-4 col-sm-12">
-              <table class="table container-fluid">
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th>1 Rep Max</th>
-                    <th scope="col">Best Set</th>
-                    <th scope="col"># Of Sets</th>
-                    <th scope="col">Video</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
-                    <th scope="row">{{ e.date }}</th>
-                    <td>{{ findBestOneRepMax(e.sets) }}</td>
-                    <td>{{ getBestSetAsString(e.sets) }}</td>
-                    <td>{{ e.sets.length }}</td>
-                    <td v-if="getVideoUrlFromSets(e.sets)">
-                      <i
-                        class="bi bi-play-btn-fill hoverable"
-                        @click="
-                          changeVideoFromExercise({
-                            exerciseName: exercise.exerciseName,
-                            videoUrl: getVideoUrlFromSets(e.sets),
-                          })
-                        "
-                      ></i>
-                    </td>
-                    <td v-else><i class="bi bi-slash-circle"></i></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              v-if="exercise.videoReady"
-              class="col-lg-4 col-sm-12 container-fluid"
-            >
-              <div v-if="exercise.videoReady" class="container-fluid">
-                <video
-                  ref="videoPlayer"
-                  width="320"
-                  height="240"
-                  autoplay
-                  controls
-                >
-                  <source :src="exercise.videoUrl" />
-                  Your browser does not support video.
-                </video>
-              </div>
-
-              <div
-                class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
-                role="status"
-                v-else-if="exercise.videoLoading"
-              >
-                <span class="visually-hidden">Loading...</span>
-              </div>
-            </div>
-            <div v-else class="col-lg-4 col-sm-12"></div>
-          </div>
-        </div>
-      </div>
+    <!-- Line Chart, Table, Video Component -->
+    <div class="container-fluid" v-if="dataReady">
+      <ExerciseChartTableVideo
+        v-for="exercise in allExerciseChartData"
+        :key="exercise.exerciseName"
+        :exerciseData="exercise"
+      />
     </div>
 
     <!-- History of Workouts -->
@@ -167,8 +89,6 @@ import {
   ExerciseChartData,
   WorkingSet,
   Workout,
-  getBestSetAsString,
-  findBestOneRepMax,
 } from "@/interfaces/workout.interface";
 import {
   generateArrayOfDates,
@@ -176,9 +96,9 @@ import {
 } from "@/interfaces/dates.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
-import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
 import WorkoutCard from "@/components/WorkoutCard.vue";
+import ExerciseChartTableVideo from "@/components/ExerciseChartTableVideo.vue";
 // @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
 import router from "@/router";
@@ -193,13 +113,6 @@ export default Vue.extend({
       allExerciseChartData: Array<ExerciseChartData>(), // this is the workout data that is aggragated into exercise data
       // Todo: let the user will be able to select what exercise they wish to view
       currentlySelectedExercise: "Squat",
-      chartOptions: {
-        responsive: true,
-        maintainAspectRatio: true,
-        tooltips: {
-          callbacks: {},
-        },
-      },
       noDataInThisDateRange: false,
       startDate: moment()
         .subtract(1, "week")
@@ -343,59 +256,12 @@ export default Vue.extend({
         }
       }
     },
-    // Chart Methods
-    changeVideoFromExercise(videoData: any) {
-      if (videoData.exerciseName) {
-        // Figureout which exercise clicked from this.allExerciseChartData
-        let exerciseIdx = -1;
-        this.allExerciseChartData.forEach((exercise, idx) => {
-          if (exercise.exerciseName == videoData.exerciseName) {
-            exerciseIdx = idx;
-          }
-        });
-
-        if (
-          videoData.videoUrl !== undefined &&
-          videoData.videoUrl !== "" &&
-          exerciseIdx !== -1
-        ) {
-          this.allExerciseChartData[exerciseIdx].videoReady = false;
-          this.allExerciseChartData[exerciseIdx].videoLoading = true;
-
-          // This allows multiple videos to be played from one video player
-          setTimeout(() => {
-            this.allExerciseChartData[exerciseIdx].videoUrl =
-              videoData.videoUrl;
-            this.allExerciseChartData[exerciseIdx].videoReady = true;
-            this.allExerciseChartData[exerciseIdx].videoLoading = false;
-          }, 500);
-        } else {
-          this.allExerciseChartData[exerciseIdx].videoUrl = "";
-          this.allExerciseChartData[exerciseIdx].videoReady = false;
-        }
-      }
-    },
-
-    // One Rep Max calculations ===============
-    getBestSetAsString(sets: Array<WorkingSet>): string {
-      return getBestSetAsString(sets);
-    },
-    findBestOneRepMax(sets: Array<WorkingSet>): number {
-      return findBestOneRepMax(sets);
-    },
-    getVideoUrlFromSets(sets: Array<WorkingSet>): string {
-      let videoUrl = "";
-      sets.forEach((set) => {
-        if (set.videoUrl) videoUrl = set.videoUrl;
-      });
-      return videoUrl;
-    },
   },
   components: {
-    LineChart,
     FunctionalCalendar,
     Navbar,
     WorkoutCard,
+    ExerciseChartTableVideo,
   },
 });
 </script>

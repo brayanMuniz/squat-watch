@@ -341,9 +341,6 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.hoverable {
-  cursor: pointer;
-}
 .image-upload > input {
   display: none;
 }

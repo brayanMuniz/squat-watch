@@ -87,7 +87,6 @@ import moment from "moment";
 import {
   covertWorkoutDataToChartData,
   ExerciseChartData,
-  WorkingSet,
   Workout,
 } from "@/interfaces/workout.interface";
 import {

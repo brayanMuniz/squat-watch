@@ -9,6 +9,7 @@ import Browse from "@/views/Browse.vue";
 import BrowseUser from "@/views/BrowseUser.vue";
 import NotFound from "@/views/404.vue";
 import WorkoutPlan from "@/views/WorkoutPlan.vue";
+import UpdateWorkout from "@/views/UpdateWorkout.vue";
 
 Vue.use(VueRouter);
 
@@ -22,6 +23,12 @@ const routes: Array<RouteConfig> = [
     path: "/upload",
     name: "Upload",
     component: Upload,
+  },
+  {
+    path: "/history/:date",
+    name: "Update Workout",
+    component: UpdateWorkout,
+    props: true,
   },
   {
     path: "/history",

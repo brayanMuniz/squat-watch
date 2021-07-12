@@ -109,7 +109,7 @@
 
         <div class="col-md-4 px-0">
           <div
-            class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
+            class="container-fluid row row-cols-1 row-cols-xxl-2"
           >
             <div
               class="col"

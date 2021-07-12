@@ -3,9 +3,19 @@
     <div class="card-body">
       <h5 class="card-title">
         {{ cardWorkoutData.name }}
-        <button type="button" v-if="ableToEditWorkout" class="btn btn-primary">
-          <i v-if="ableToEditWorkout" class="bi bi-pen-fill"></i>
-        </button>
+
+        <router-link
+          v-if="ableToEditWorkout"
+          class="btn btn-primary btn-sm"
+          :to="{
+            name: 'Update Workout',
+            params: {
+              date: cardWorkoutData.date,
+              workoutData: cardWorkoutData,
+            },
+          }"
+          ><i class="bi bi-pen-fill"></i
+        ></router-link>
       </h5>
       <h6 class="card-subtitle mb-2 text-muted">
         {{ dateToMonthDay(cardWorkoutData.date) }}

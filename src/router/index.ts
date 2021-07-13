@@ -25,15 +25,15 @@ const routes: Array<RouteConfig> = [
     component: Upload,
   },
   {
+    path: "/history",
+    name: "History",
+    component: History,
+  },
+  {
     path: "/history/:date",
     name: "Update Workout",
     component: UpdateWorkout,
     props: true,
-  },
-  {
-    path: "/history",
-    name: "History",
-    component: History,
   },
   {
     path: "/createAccount",

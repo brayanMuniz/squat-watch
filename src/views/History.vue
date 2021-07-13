@@ -9,7 +9,7 @@
         class="col my-2 mx-1"
         v-for="(workout, workoutIdx) in historyOfWorkouts"
         :key="workoutIdx"
-        :workoutData="workout"
+        :propWorkoutData="workout"
         :ableToEditWorkout="true"
       />
     </div>
@@ -43,12 +43,11 @@ export default Vue.extend({
         uid: store.getters.getMyUID,
       })
       .then((res) => {
-        console.log(res);
+        console.log("Got new Workouts");
       })
       .catch((err) => {
         console.error(err);
       });
-    console.log(store.getters.getSavedWorkoutData);
   },
   components: {
     WorkoutCard,

@@ -1,8 +1,8 @@
 <template>
   <div>
     <Navbar />
-    <div>
-      <form @submit.prevent="uploadWorkout">
+    <div v-if="initialDataReady">
+      <form @submit.prevent="updateWorkout">
         <div class="container-fluid">
           <div class="row">
             <div class="col-sm-6 col-md-4">
@@ -34,7 +34,8 @@
               <div class="form-group">
                 <label for="Workout Name">Date: </label>
                 <input
-                  v-model.trim="workoutData.date"
+                  disabled
+                  v-model.trim="workoutDate"
                   type="date"
                   class="form-control"
                   id="workoutDate"
@@ -112,30 +113,61 @@ import Vue from "vue";
 import Navbar from "@/components/Navbar.vue";
 import { Exercise, Workout } from "@/interfaces/workout.interface";
 import ExerciseComponent from "@/components/Exercise.vue";
+import { firebaseApp } from "@/firebase";
+import store from "@/store";
+import moment from "moment";
+import router from "@/router";
 
 export default Vue.extend({
   props: {
-    workoutData: {
+    propWorkoutData: {
       type: Object as () => Workout,
     },
   },
   data() {
     return {
+      workoutData: this.propWorkoutData,
+      initialDataReady: false,
       userWantsToAddNote: false,
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       uploading: false,
+      workoutDate: "",
       poggersUpload: "0%",
     };
   },
   async created() {
-    //   Todo: set /history?date=>>> and get date from router then firebaseApp.firestore().get() data
-    if (this.workoutData) {
-      this.amountOfExercises.amount = this.workoutData.exercises.length;
-      this.amountOfExercises.copiedExerciseData = this.workoutData.exercises;
+    if (!this.propWorkoutData && router.currentRoute.params.date) {
+      await store
+        .dispatch("retriveWorkoutData", {
+          uid: store.getters.getMyUID,
+          dates: [router.currentRoute.params.date],
+        })
+        .then((gottenWorkoutData: Array<Workout>) => {
+          this.workoutData = gottenWorkoutData[0];
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
+
+    this.amountOfExercises.amount = this.workoutData.exercises.length;
+    this.amountOfExercises.copiedExerciseData = this.workoutData.exercises;
+    this.workoutDate = moment(this.workoutData.date).format("YYYY-MM-DD");
+    this.initialDataReady = true;
+
+    console.log(this.amountOfExercises.amount);
     console.log(this.workoutData);
   },
   methods: {
+    async updateWorkout() {
+      let refToDocument = firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(store.getters.getMyUID)
+        .collection("workouts")
+        .doc(this.workoutData.date);
+      console.log(this.workoutData);
+    },
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 

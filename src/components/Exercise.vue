@@ -26,6 +26,7 @@
             ></i>
           </label>
           <input
+            :disabled="notAbleToUpdateExerciseName"
             class="form-control"
             type="text"
             list="exercises"
@@ -82,7 +83,11 @@
           />
         </div>
         <div class="col image-upload">
-          <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">
+          <label
+            :for="returnUniqueId(index)"
+            v-if="doesSetContainVideo(index)"
+            :class="{ disabled: notAbleToReplaceVideo }"
+          >
             <i
               class="bi bi-file-check-fill text-success hoverable custom-icon-fontsize"
             ></i>
@@ -127,6 +132,14 @@ export default Vue.extend({
   props: {
     copiedExerciseData: {
       type: Object as () => Exercise,
+    },
+    notAbleToReplaceVideo: {
+      type: Boolean,
+      default: false,
+    },
+    notAbleToUpdateExerciseName: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -271,5 +284,10 @@ export default Vue.extend({
 
 .image-upload > input {
   display: none;
+}
+
+.disabled {
+  pointer-events: none;
+  cursor: not-allowed;
 }
 </style>

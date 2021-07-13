@@ -68,6 +68,8 @@
               :copiedExerciseData="
                 amountOfExercises.copiedExerciseData[exercise - 1]
               "
+              :notAbleToReplaceVideo="true"
+              :notAbleToUpdateExerciseName="true"
               v-on:emitExerciseData="watchForData($event)"
               v-on:removeExercise="removeExerciseComp($event)"
             />

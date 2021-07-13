@@ -54,7 +54,6 @@
       </div>
     </div>
 
-    <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div class="container-fluid">
       <div v-for="(set, index) in exerciseData.sets" :key="index" class="row">
@@ -148,16 +147,26 @@ export default Vue.extend({
   },
   created() {
     if (this.copiedExerciseData) {
-      console.log(this.copiedExerciseData);
       this.exerciseData.exerciseName = this.copiedExerciseData.exerciseName;
+
+      console.log(`New Exercise Component: ${this.exerciseData.exerciseName}`);
+
       this.exerciseData.sets = [];
-      this.copiedExerciseData.sets.forEach((set) => {
+      this.copiedExerciseData.sets.forEach((set, idx) => {
         this.exerciseData.sets.push({
           weight: set.weight,
           reps: set.reps,
           videoUrl: "",
         });
+
+        if (set.videoUrl !== undefined)
+          this.exerciseData.sets[idx].videoUrl = set.videoUrl;
       });
+
+      if (this.copiedExerciseData.exerciseNote) {
+        this.changeExerciseNote(false);
+        this.exerciseData.exerciseNote = this.copiedExerciseData.exerciseNote;
+      }
     }
     this.$emit("emitExerciseData", this.exerciseData);
   },
@@ -188,6 +197,12 @@ export default Vue.extend({
           if (vidData.setVideoIdx === setIdx) itDoes = true;
         });
       }
+
+      if (
+        this.exerciseData.sets[setIdx].videoUrl !== "" &&
+        this.exerciseData.sets[setIdx] !== undefined
+      )
+        itDoes = true;
       return itDoes;
     },
     returnUniqueId(setVideoIdx: number) {
@@ -236,8 +251,8 @@ export default Vue.extend({
   watch: {
     exerciseData: {
       deep: true,
-      handler(changedData) {
-        this.$emit("emitExerciseData", changedData);
+      handler(newValue, oldValue) {
+        if (newValue !== oldValue) this.$emit("emitExerciseData", newValue);
       },
     },
   },
@@ -257,8 +272,4 @@ export default Vue.extend({
 .image-upload > input {
   display: none;
 }
-
-/* * {
-  outline: 1px solid red;
-} */
 </style>

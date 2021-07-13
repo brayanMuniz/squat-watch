@@ -53,7 +53,7 @@ import {
 
 export default Vue.extend({
   props: {
-    workoutData: {
+    propWorkoutData: {
       type: Object as () => Workout,
     },
     ableToEditWorkout: {
@@ -63,11 +63,8 @@ export default Vue.extend({
   },
   data() {
     return {
-      cardWorkoutData: {},
+      cardWorkoutData: this.propWorkoutData,
     };
-  },
-  created() {
-    this.cardWorkoutData = this.workoutData;
   },
   methods: {
     getBestSetAsString(sets: Array<WorkingSet>): string {

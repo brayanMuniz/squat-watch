@@ -73,7 +73,7 @@
         class="col mx-1"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
-        :workoutData="workout"
+        :propWorkoutData="workout"
       />
     </div>
 

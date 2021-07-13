@@ -22,7 +22,7 @@
                   ></i
                 ></label>
                 <input
-                  v-model.trim="workoutData.name"
+                  v-model.trim="workoutName"
                   type="text"
                   class="form-control"
                   id="workoutName"
@@ -49,7 +49,7 @@
                   >Workout Note:
                 </label>
                 <textarea
-                  v-model.trim="workoutData.workoutNote"
+                  v-model.trim="workoutNote"
                   class="form-control"
                   id="workoutNote"
                   rows="3"
@@ -126,16 +126,26 @@ export default Vue.extend({
   },
   data() {
     return {
-      workoutData: this.propWorkoutData,
+      workoutName: "",
+      workoutDate: "",
+      workoutNote: "",
+      exercises: Array<Exercise>(),
+      workoutData: {},
       initialDataReady: false,
       userWantsToAddNote: false,
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       uploading: false,
-      workoutDate: "",
       poggersUpload: "0%",
     };
   },
+  // Todo: delete initalWorkout data because when new component is created, data is pushed to workoutsData
   async created() {
+    // If you go into this page with a fresh reload, no prop data is given, so it gets it from firestore
+    let workoutData: Workout = {
+      name: "",
+      date: "",
+      exercises: [],
+    };
     if (!this.propWorkoutData && router.currentRoute.params.date) {
       await store
         .dispatch("retriveWorkoutData", {
@@ -143,20 +153,23 @@ export default Vue.extend({
           dates: [router.currentRoute.params.date],
         })
         .then((gottenWorkoutData: Array<Workout>) => {
-          this.workoutData = gottenWorkoutData[0];
+          console.log("Got workout Data from firestore");
+          workoutData = gottenWorkoutData[0];
         })
         .catch((err) => {
           console.error(err);
         });
-    }
+    } else workoutData = this.propWorkoutData;
 
-    this.amountOfExercises.amount = this.workoutData.exercises.length;
-    this.amountOfExercises.copiedExerciseData = this.workoutData.exercises;
-    this.workoutDate = moment(this.workoutData.date).format("YYYY-MM-DD");
+    this.workoutName = workoutData.name;
+    if (workoutData.workoutNote) this.workoutNote = workoutData.workoutNote;
+
+    this.amountOfExercises.amount = workoutData.exercises.length;
+    this.amountOfExercises.copiedExerciseData = workoutData.exercises;
+    this.workoutDate = moment(workoutData.date).format("YYYY-MM-DD");
     this.initialDataReady = true;
 
-    console.log(this.amountOfExercises.amount);
-    console.log(this.workoutData);
+    console.log(this.exercises);
   },
   methods: {
     async updateWorkout() {
@@ -165,14 +178,15 @@ export default Vue.extend({
         .collection("users")
         .doc(store.getters.getMyUID)
         .collection("workouts")
-        .doc(this.workoutData.date);
-      console.log(this.workoutData);
+        .doc(this.workoutDate);
+      console.log(this.workoutName);
+      console.log(this.exercises);
     },
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 
-      if (this.workoutData.exercises.includes(exerciseData)) {
-        this.workoutData.exercises.forEach((exercise, idx) => {
+      if (this.exercises.includes(exerciseData)) {
+        this.exercises.forEach((exercise, idx) => {
           if (exercise === exerciseData) {
             exerciseIdx = idx;
           }
@@ -180,7 +194,7 @@ export default Vue.extend({
       }
 
       if (exerciseIdx !== undefined) {
-        this.workoutData.exercises.splice(exerciseIdx, 1);
+        this.exercises.splice(exerciseIdx, 1);
         this.amountOfExercises.amount--;
       } else {
         console.error("Problem Removing Exercise.");
@@ -190,10 +204,11 @@ export default Vue.extend({
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
     watchForData(changedData: any) {
+      console.log(changedData.exerciseName);
       // When new data is pushed onto this.exercises, it will automotically update because there is a watcher on it
-      if (!this.workoutData.exercises.includes(changedData)) {
+      if (!this.exercises.includes(changedData)) {
         console.log("Pushing new exercise");
-        this.workoutData.exercises.push(changedData);
+        this.exercises.push(changedData);
       }
     },
   },

@@ -113,7 +113,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Navbar from "@/components/Navbar.vue";
-import { Exercise, Workout } from "@/interfaces/workout.interface";
+import { Exercise, VideoData, Workout } from "@/interfaces/workout.interface";
 import ExerciseComponent from "@/components/Exercise.vue";
 import { firebaseApp } from "@/firebase";
 import store from "@/store";
@@ -132,6 +132,7 @@ export default Vue.extend({
       workoutDate: "",
       workoutNote: "",
       exercises: Array<Exercise>(),
+      originalExerciseData: {} as Workout,
       workoutData: {},
       initialDataReady: false,
       userWantsToAddNote: false,
@@ -163,6 +164,8 @@ export default Vue.extend({
         });
     } else workoutData = this.propWorkoutData;
 
+    console.log(workoutData);
+    this.originalExerciseData = workoutData;
     this.workoutName = workoutData.name;
     if (workoutData.workoutNote) this.workoutNote = workoutData.workoutNote;
 
@@ -175,14 +178,144 @@ export default Vue.extend({
   },
   methods: {
     async updateWorkout() {
-      let refToDocument = firebaseApp
+      const myUid: string = store.getters.getMyUID;
+      let formattedDate = moment(this.workoutDate).format("MM-DD-YYYY");
+      let batch = firebaseApp.firestore().batch();
+
+      let newWorkoutData: Workout = {
+        name: this.workoutName,
+        exercises: this.exercises,
+        date: this.workoutDate,
+      };
+
+      // Todo: do this to /upload
+      if (!newWorkoutData.length) delete newWorkoutData.length;
+      if (!newWorkoutData.workoutNote) delete newWorkoutData.workoutNote;
+
+      let addNewExerciseToUserData: Array<string> = [];
+
+      for (const exercise in newWorkoutData.exercises) {
+        let exerciseData = newWorkoutData.exercises[exercise];
+
+        let exerciseName: string = exerciseData.exerciseName;
+        if (!this.userHasExerciseLogged(exerciseName))
+          addNewExerciseToUserData.push(exerciseName);
+
+        // If exercise note is empty, delete it
+        if (!exerciseData.exerciseNote)
+          delete newWorkoutData.exercises[exercise].exerciseNote;
+
+        // Uses videoData helper to upload every video into firebase storage and sets videoUrl into exercise.set.videoUrl
+        if (exerciseData.videoData) {
+          for (const setWithVideo in exerciseData.videoData) {
+            let setVideoData: VideoData = exerciseData.videoData[setWithVideo];
+
+            let location = `users/${myUid}/workouts/exercises/${exerciseName}/${formattedDate}`;
+            const videoRef = firebaseApp.storage().ref(location);
+
+            await videoRef
+              .put(setVideoData.video)
+              .then(async (res) => {
+                await res.ref
+                  .getDownloadURL()
+                  .then((downloadUrl) => {
+                    console.log(downloadUrl);
+                    newWorkoutData.exercises[exercise].sets[
+                      setVideoData.setVideoIdx
+                    ].videoUrl = downloadUrl;
+                  })
+                  .catch((err) => {
+                    console.error(err);
+                  });
+              })
+              .catch((err) => {
+                console.error(err);
+              });
+          }
+        }
+
+        // If no videos for this set, delete videoUrl property
+        for (const set in exerciseData.sets) {
+          if (exerciseData.sets[set].videoUrl === "") {
+            delete newWorkoutData.exercises[exercise].sets[set].videoUrl;
+          }
+        }
+
+        // delete the videoData helper
+        delete newWorkoutData.exercises[exercise].videoData;
+      }
+
+      // Ref to /users/docId/workouts/workoutId
+      const refToWorkoutDocument = firebaseApp
         .firestore()
         .collection("users")
         .doc(store.getters.getMyUID)
         .collection("workouts")
-        .doc(this.workoutDate);
-      console.log(this.workoutName);
-      console.log(this.exercises);
+        .doc(moment(this.workoutDate).format("MM-DD-YYYY"));
+      batch.update(refToWorkoutDocument, newWorkoutData);
+
+      // If the user adds an exercise they have never done before, add it to their document
+      if (addNewExerciseToUserData.length > 0) {
+        let newExercises: Array<string> = store.getters.getUserData.exercises.concat(
+          addNewExerciseToUserData
+        );
+        const userDataDoc = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(myUid);
+
+        batch.update(userDataDoc, {
+          exercises: newExercises,
+        });
+      }
+
+      // path to /users/docId/exercises
+      let pathToExercisesCollection = firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(myUid)
+        .collection("exercises");
+
+      // Updates the /exercise collection
+      for (let exercise in newWorkoutData.exercises) {
+        let data: any = {};
+        data[formattedDate] = {
+          setsDone: newWorkoutData.exercises[exercise].sets,
+          workoutName: this.workoutName,
+          exerciseNote: "",
+        };
+
+        // Sets exercise note, or deletes property if none is provided
+        if (newWorkoutData.exercises[exercise].exerciseNote)
+          data[formattedDate]["exerciseNote"] =
+            newWorkoutData.exercises[exercise].exerciseNote;
+        else delete data[formattedDate]["exerciseNote"];
+
+        let exerciseName: string =
+          newWorkoutData.exercises[exercise].exerciseName;
+        batch.set(pathToExercisesCollection.doc(exerciseName), data, {
+          merge: true,
+        });
+      }
+
+      batch
+        .commit()
+        .then(() => {
+          alert("Your workout has been updated.");
+          this.uploading = false;
+        })
+        .catch(() => {
+          this.uploading = false;
+          alert("There was a problem uploading your workout.");
+          console.error("Batch no good SADGE :(");
+        });
+    },
+    // Todo: move this to store
+    userHasExerciseLogged(exerciseName: string): boolean {
+      let isLogged = false;
+      if (store.getters.getUserData.exercises.includes(exerciseName))
+        isLogged = true;
+      return isLogged;
     },
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;

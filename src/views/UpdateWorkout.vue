@@ -181,6 +181,7 @@ export default Vue.extend({
       const myUid: string = store.getters.getMyUID;
       let formattedDate = moment(this.workoutDate).format("MM-DD-YYYY");
       let batch = firebaseApp.firestore().batch();
+      let uploadAmount = 0;
 
       let newWorkoutData: Workout = {
         name: this.workoutName,
@@ -243,6 +244,12 @@ export default Vue.extend({
 
         // delete the videoData helper
         delete newWorkoutData.exercises[exercise].videoData;
+
+        // Show user progress of uploads
+        uploadAmount++;
+        this.poggersUpload = `${(uploadAmount /
+          newWorkoutData.exercises.length) *
+          100}%`;
       }
 
       // Ref to /users/docId/workouts/workoutId

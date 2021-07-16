@@ -3,7 +3,7 @@
     <Navbar />
 
     <div
-      class="container-fluid mb-1 row row-cols-1 row-cols-md-3 row-cols-xl-5"
+      class="container-fluid mb-1 row row-cols-1 row-cols-md-2 row-cols-xl-5"
     >
       <WorkoutCard
         class="col my-2 mx-1"
@@ -11,6 +11,7 @@
         :key="workoutIdx"
         :propWorkoutData="workout"
         :ableToEditWorkout="true"
+        :ableToDeleteWorkout="true"
       />
     </div>
   </div>

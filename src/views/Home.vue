@@ -43,90 +43,26 @@
       </div>
     </div>
 
-    <!-- Workout Chart, Table and video. -->
-    <div class="container-fluid">
-      <div class="row">
-        <div
-          class="col-xxl-6"
-          v-for="exercise in allExerciseChartData"
-          :key="exercise.exerciseName"
-        >
-          <div class="row">
-            <div class="col-lg-5 col-sm-12">
-              <div v-if="dataReady" class="container-fluid">
-                <!-- :options prop needs to be passed in or there will be an error -->
-                <LineChart
-                  :chartData="exercise.chartData"
-                  :options="chartOptions"
-                  :workingSets="exercise.setsWithDates"
-                  :exerciseName="exercise.exerciseName"
-                  v-on:clickedPoint="changeVideoFromExercise($event)"
-                />
-              </div>
-            </div>
-            <!-- There are two ways to show this. Workout of day, with sets going down, or general overview of workouts throughout the days -->
-            <div class="col-lg-3 col-sm-12">
-              <table class="table container-fluid">
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th>1 Rep Max</th>
-                    <th scope="col">Best Set</th>
-                    <th scope="col"># Of Sets</th>
-                    <th scope="col">Video</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(e, idx) in exercise.setsWithDates" :key="idx">
-                    <th scope="row">{{ e.date }}</th>
-                    <td>{{ findBestOneRepMax(e.sets) }}</td>
-                    <td>{{ getBestSetAsString(e.sets) }}</td>
-                    <td>{{ e.sets.length }}</td>
-                    <td v-if="getVideoUrlFromSets(e.sets)">
-                      <i
-                        class="bi bi-play-btn-fill hoverable"
-                        @click="
-                          changeVideoFromExercise({
-                            exerciseName: exercise.exerciseName,
-                            videoUrl: getVideoUrlFromSets(e.sets),
-                          })
-                        "
-                      ></i>
-                    </td>
-                    <td v-else><i class="bi bi-slash-circle"></i></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              v-if="exercise.videoReady"
-              class="col-lg-4 col-sm-12 container-fluid"
-            >
-              <div v-if="exercise.videoReady" class="container-fluid">
-                <video
-                  ref="videoPlayer"
-                  width="320"
-                  height="240"
-                  autoplay
-                  controls
-                >
-                  <source :src="exercise.videoUrl" />
-                  Your browser does not support video.
-                </video>
-              </div>
-
-              <div
-                class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
-                role="status"
-                v-else-if="exercise.videoLoading"
-              >
-                <span class="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Workout plan -->
+    <div>
+      <h4>Workout Plan:</h4>
+      <div class="row" v-if="userWorkoutPlan.length > 0">
+        <div class="col"></div>
       </div>
+      <div v-else>
+        <button type="button" class="btn btn-primary">
+          Create A Workout Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Line Chart, Table, Video Component -->
+    <div class="container-fluid" v-if="dataReady">
+      <ExerciseChartTableVideo
+        v-for="exercise in allExerciseChartData"
+        :key="exercise.exerciseName"
+        :exerciseData="exercise"
+      />
     </div>
 
     <!-- History of Workouts -->
@@ -137,7 +73,7 @@
         class="col mx-1"
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
-        :workoutData="workout"
+        :propWorkoutData="workout"
       />
     </div>
 
@@ -147,41 +83,35 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { firebaseApp } from "@/firebase";
 import moment from "moment";
 import {
-  ChartWorkingSet,
+  covertWorkoutDataToChartData,
   ExerciseChartData,
-  WorkingSet,
   Workout,
 } from "@/interfaces/workout.interface";
+import {
+  generateArrayOfDates,
+  getMissingDates,
+} from "@/interfaces/dates.interface";
 import { ChartData } from "chart.js";
 import store from "@/store";
-import LineChart from "@/components/LineChart";
 import Navbar from "@/components/Navbar.vue";
 import WorkoutCard from "@/components/WorkoutCard.vue";
+import ExerciseChartTableVideo from "@/components/ExerciseChartTableVideo.vue";
 // @ts-expect-error Import errors are fine
 import { FunctionalCalendar } from "vue-functional-calendar";
+import router from "@/router";
 
 export default Vue.extend({
   name: "Home",
   data() {
     return {
-      videoReady: false,
-      videoUrl: "",
       dataReady: false,
       dataCollection: Object() as ChartData,
       allWorkouts: Array<Workout>(),
       allExerciseChartData: Array<ExerciseChartData>(), // this is the workout data that is aggragated into exercise data
       // Todo: let the user will be able to select what exercise they wish to view
       currentlySelectedExercise: "Squat",
-      chartOptions: {
-        responsive: true,
-        maintainAspectRatio: true,
-        tooltips: {
-          callbacks: {},
-        },
-      },
       noDataInThisDateRange: false,
       startDate: moment()
         .subtract(1, "week")
@@ -199,15 +129,33 @@ export default Vue.extend({
         // markedDates: ["6/15/2021"],
       },
       pickedDates: Array<string>(),
+      userWorkoutPlan: Array<Workout>(),
     };
   },
   async created() {
-    if (this.$store.getters.getMyUID !== "") {
+    if (store.getters.getMyUID !== "") {
+      // Get Initial Workout Data For Week
+      const myUID: string = store.getters.getMyUID;
       let workoutData: Array<Workout> = [];
-      if (this.getMissingDates(this.startDate, this.endDate).length === 0) {
-        workoutData = this.$store.getters.getSavedWorkoutData.workoutData;
+      if (getMissingDates(this.startDate, this.endDate).length === 0) {
+        workoutData = store.getters.getSavedWorkoutData.workoutData;
       } else {
-        await this.retriveWorkoutData(this.startDate, this.endDate)
+        let dates: Array<string> = [];
+        if (this.startDate && this.endDate) {
+          dates = generateArrayOfDates(this.startDate, this.endDate);
+        } else {
+          dates = generateArrayOfDates(
+            moment()
+              .subtract(1, "week")
+              .format("MM-DD-YYYY"),
+            moment().format("MM-DD-YYYY")
+          );
+        }
+        await store
+          .dispatch("retriveWorkoutData", {
+            dates: dates,
+            uid: myUID,
+          })
           .then((res) => {
             workoutData = res;
           })
@@ -216,18 +164,17 @@ export default Vue.extend({
             console.error(err);
           });
       }
-
       this.allWorkouts = workoutData;
       let convertedData:
         | Array<ExerciseChartData>
-        | undefined = this.covertWorkoutDataToChartData(workoutData);
+        | undefined = covertWorkoutDataToChartData(workoutData);
       if (convertedData.length > 0) {
         this.currentlySelectedExercise = convertedData[0].exerciseName;
         this.dataCollection = convertedData[0].chartData;
         this.allExerciseChartData = convertedData;
         this.dataReady = true;
 
-        this.$store.commit("updateSavedWorkoutData", {
+        store.commit("updateSavedWorkoutData", {
           startDate: this.startDate,
           endDate: this.endDate,
           workoutData: workoutData,
@@ -235,20 +182,11 @@ export default Vue.extend({
       } else {
         this.noDataInThisDateRange = true;
       }
-    } else this.$router.push("/createAccount");
+
+      console.log(store.getters.getUserData);
+    } else router.push("/createAccount");
   },
   methods: {
-    getMissingDates(startDate: string, endDate: string): Array<string> {
-      let wantedDates: Array<string> = this.generateArrayOfDates(
-        startDate,
-        endDate
-      );
-      let currentDates: Array<string> = this.generateArrayOfDates(
-        this.$store.getters.getSavedWorkoutData.startDate,
-        this.$store.getters.getSavedWorkoutData.endDate
-      );
-      return wantedDates.filter((date) => !currentDates.includes(date));
-    },
     async getDateRange(event: any) {
       console.log(event);
       if (event.date) {
@@ -275,12 +213,20 @@ export default Vue.extend({
           }
 
           console.log(this.startDate, this.endDate);
+          let dates: Array<string> = generateArrayOfDates(
+            this.startDate,
+            this.endDate
+          );
 
-          await this.retriveWorkoutData(this.startDate, this.endDate)
+          await store
+            .dispatch("retriveWorkoutData", {
+              dates: dates,
+              uid: store.getters.getMyUID,
+            })
             .then((res) => {
               let convertedData:
                 | Array<ExerciseChartData>
-                | undefined = this.covertWorkoutDataToChartData(res);
+                | undefined = covertWorkoutDataToChartData(res);
               if (convertedData.length > 0) {
                 let selectedExerciseIdx = -1;
                 convertedData.forEach((data, idx) => {
@@ -309,236 +255,12 @@ export default Vue.extend({
         }
       }
     },
-    generateArrayOfDates(startDate: string, endDate: string): Array<string> {
-      let dates: Array<string> = [];
-      let startDateMoment = moment(startDate);
-      let endDateMoment = moment(endDate);
-
-      // With +1 it will include the day of
-      const diffInDays: number =
-        endDateMoment.diff(startDateMoment, "days") + 1;
-
-      // Populates array with dates
-      for (let i = 0; i < diffInDays; i++) {
-        let calculatedDay = moment(startDate).add(i, "days");
-        dates.push(moment(calculatedDay).format("MM-DD-YYYY"));
-      }
-      return dates;
-    },
-    async retriveWorkoutData(startDate?: string, endDate?: string) {
-      let dates: Array<string> = [];
-      let workoutData: Array<Workout> = [];
-      let error = false;
-
-      // if startDate not provided, gets data from one week ago to now
-      if (startDate && endDate) {
-        dates = this.generateArrayOfDates(startDate, endDate);
-      } else {
-        dates = this.generateArrayOfDates(
-          moment()
-            .subtract(1, "week")
-            .format("MM-DD-YYYY"),
-          moment().format("MM-DD-YYYY")
-        );
-      }
-
-      const myUID: string | undefined = store.getters.getMyUID;
-      if (myUID !== undefined) {
-        let workoutPath = firebaseApp
-          .firestore()
-          .collection("users")
-          .doc(myUID)
-          .collection("workouts");
-
-        // ? Do i place custom workout object in workout interface or make a new file for it ?
-        let workoutConverter = {
-          toFirestore: function(workout: Workout) {
-            return {
-              name: workout.name,
-              date: workout.date,
-              exercises: workout.exercises,
-              length: workout.length,
-            };
-          },
-          fromFireStore: function(doc: any) {
-            const data = doc.data();
-            return new Workout(data.name, doc.id, data.exercises, data.length);
-          },
-        };
-
-        // using for ... in instead of forEach becasue for of will use await properly
-        for (const date in dates) {
-          await workoutPath
-            .doc(dates[date])
-            .get()
-            .then((doc) => {
-              if (doc.exists) {
-                workoutData.push(workoutConverter.fromFireStore(doc));
-              }
-            })
-            .catch((err) => {
-              console.error(err);
-            });
-        }
-
-        if (error) {
-          return Promise.reject("Error");
-        } else {
-          return Promise.resolve(workoutData);
-        }
-      } else {
-        return Promise.reject("Not signed in ");
-      }
-    },
-    // Converts every exercise into one set of ChartData obj.
-    covertWorkoutDataToChartData(
-      workoutData: Array<Workout>
-    ): Array<ExerciseChartData> {
-      // helps keep track what exercises i already have an object for
-      let alreadyStartedExercises: Array<string> = [];
-      let allExercises: Array<ExerciseChartData> = [];
-
-      workoutData.forEach((workout) => {
-        workout.exercises.forEach((exercise) => {
-          if (alreadyStartedExercises.includes(exercise.exerciseName)) {
-            allExercises.forEach((exerciseChartData) => {
-              if (exerciseChartData.exerciseName === exercise.exerciseName) {
-                // Configure Chart Data ==
-                // x axis of dates
-                if (exerciseChartData.chartData.labels)
-                  exerciseChartData.chartData.labels.push(workout.date);
-
-                // y axis of one rep max
-                if (exerciseChartData.chartData.datasets) {
-                  if (exerciseChartData.chartData.datasets[0].data)
-                    exerciseChartData.chartData.datasets[0].data.push(
-                      this.findBestOneRepMax(exercise.sets)
-                    );
-                }
-
-                // Cofigures set data ==
-
-                let formattedSets: ChartWorkingSet = {
-                  date: workout.date,
-                  sets: exercise.sets,
-                };
-                exerciseChartData.setsWithDates.push(formattedSets);
-              }
-            });
-          } else {
-            alreadyStartedExercises.push(exercise.exerciseName);
-
-            let convertedDataToChart: ChartData = {
-              labels: [workout.date], // x axis
-              datasets: [
-                {
-                  label: `${exercise.exerciseName} One Rep Max`,
-                  data: [this.findBestOneRepMax(exercise.sets)], // y axis
-                  fill: false,
-                  borderColor: "#0000a5",
-                },
-              ],
-            };
-
-            let formattedSets: ChartWorkingSet = {
-              date: workout.date,
-              sets: exercise.sets,
-            };
-
-            allExercises.push({
-              exerciseName: exercise.exerciseName,
-              chartData: convertedDataToChart,
-              setsWithDates: [formattedSets],
-              videoReady: false,
-              videoUrl: "",
-              videoLoading: false,
-            });
-          }
-        });
-      });
-
-      return allExercises;
-    },
-    // Chart Methods
-    changeVideoFromExercise(videoData: any) {
-      if (videoData.exerciseName) {
-        // Figureout which exercise clicked from this.allExerciseChartData
-        let exerciseIdx = -1;
-        this.allExerciseChartData.forEach((exercise, idx) => {
-          if (exercise.exerciseName == videoData.exerciseName) {
-            exerciseIdx = idx;
-          }
-        });
-
-        if (
-          videoData.videoUrl !== undefined &&
-          videoData.videoUrl !== "" &&
-          exerciseIdx !== -1
-        ) {
-          this.allExerciseChartData[exerciseIdx].videoReady = false;
-          this.allExerciseChartData[exerciseIdx].videoLoading = true;
-
-          // This allows multiple videos to be played from one video player
-          setTimeout(() => {
-            this.allExerciseChartData[exerciseIdx].videoUrl =
-              videoData.videoUrl;
-            this.allExerciseChartData[exerciseIdx].videoReady = true;
-            this.allExerciseChartData[exerciseIdx].videoLoading = false;
-          }, 500);
-        } else {
-          this.allExerciseChartData[exerciseIdx].videoUrl = "";
-          this.allExerciseChartData[exerciseIdx].videoReady = false;
-        }
-      }
-    },
-    // One Rep Max calculations ===============
-    getBestSetAsString(sets: Array<WorkingSet>): string {
-      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
-        sets[0].weight,
-        sets[0].reps
-      );
-
-      sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
-          bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
-        }
-      });
-      return bestSet;
-    },
-    findBestOneRepMax(sets: Array<WorkingSet>): number {
-      let bestOneRepMax = 0;
-      sets.forEach((set) => {
-        let setOneRepMax = this.calculateOneRepMax(set.weight, set.reps);
-        if (setOneRepMax > bestOneRepMax) {
-          bestOneRepMax = setOneRepMax;
-        }
-      });
-      return bestOneRepMax;
-    },
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30)); // Todo Figure out wich one rep max formuala is the best
-    },
-    getVideoUrlFromSets(sets: Array<WorkingSet>): string {
-      let videoUrl = "";
-      sets.forEach((set) => {
-        if (set.videoUrl) videoUrl = set.videoUrl;
-      });
-      return videoUrl;
-    },
   },
   components: {
-    LineChart,
     FunctionalCalendar,
     Navbar,
     WorkoutCard,
+    ExerciseChartTableVideo,
   },
 });
 </script>
-
-<style scoped>
-.hoverable {
-  cursor: pointer;
-}
-</style>

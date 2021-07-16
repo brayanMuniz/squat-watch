@@ -12,8 +12,21 @@
               @click="removeExercise"
             ></i
             >Exercise Name:
+
+            <i
+              class="bi bi-journal-plus"
+              v-if="!userWantsToAddNote"
+              @click="changeExerciseNote(false)"
+            ></i>
+
+            <i
+              class="bi bi-journal-minus"
+              v-if="userWantsToAddNote"
+              @click="changeExerciseNote(true)"
+            ></i>
           </label>
           <input
+            :disabled="notAbleToUpdateExerciseName"
             class="form-control"
             type="text"
             list="exercises"
@@ -28,11 +41,20 @@
               >{{ exerciseName }}</option
             >
           </datalist>
+
+          <div v-if="userWantsToAddNote">
+            <label for="workoutNote" class="form-label">Exercise Note: </label>
+            <textarea
+              v-model.trim="exerciseData.exerciseNote"
+              class="form-control"
+              id="workoutNote"
+              rows="3"
+            ></textarea>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- TODO: add a label to the left that is the Exercise counter.  -->
     <!-- SETS ============== -->
     <div class="container-fluid">
       <div v-for="(set, index) in exerciseData.sets" :key="index" class="row">
@@ -44,14 +66,28 @@
             ></i
             >Weight
           </label>
-          <input v-model="set.weight" type="number" class="form-control" />
+          <input
+            v-model="set.weight"
+            min="0"
+            type="number"
+            class="form-control"
+          />
         </div>
         <div class="col">
           <label for="Exercise1">Reps </label>
-          <input v-model="set.reps" type="number" class="form-control" />
+          <input
+            v-model="set.reps"
+            min="0"
+            type="number"
+            class="form-control"
+          />
         </div>
         <div class="col image-upload">
-          <label :for="returnUniqueId(index)" v-if="doesSetContainVideo(index)">
+          <label
+            :for="returnUniqueId(index)"
+            v-if="doesSetContainVideo(index)"
+            :class="{ disabled: notAbleToReplaceVideo }"
+          >
             <i
               class="bi bi-file-check-fill text-success hoverable custom-icon-fontsize"
             ></i>
@@ -88,6 +124,7 @@
 
 <script lang="ts">
 import { Exercise } from "@/interfaces/workout.interface";
+import store from "@/store";
 import Vue from "vue";
 
 export default Vue.extend({
@@ -96,14 +133,24 @@ export default Vue.extend({
     copiedExerciseData: {
       type: Object as () => Exercise,
     },
+    notAbleToReplaceVideo: {
+      type: Boolean,
+      default: false,
+    },
+    notAbleToUpdateExerciseName: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       exerciseData: {
         exerciseName: "",
         sets: [{ weight: 0, reps: 0, videoUrl: "" }],
+        exerciseNote: "",
         videoData: Array<any>(), // Todo: update this
       },
+      userWantsToAddNote: false,
       exerciseId:
         "_" +
         Math.random()
@@ -113,16 +160,26 @@ export default Vue.extend({
   },
   created() {
     if (this.copiedExerciseData) {
-      console.log(this.copiedExerciseData);
       this.exerciseData.exerciseName = this.copiedExerciseData.exerciseName;
+
+      console.log(`New Exercise Component: ${this.exerciseData.exerciseName}`);
+
       this.exerciseData.sets = [];
-      this.copiedExerciseData.sets.forEach((set) => {
+      this.copiedExerciseData.sets.forEach((set, idx) => {
         this.exerciseData.sets.push({
           weight: set.weight,
           reps: set.reps,
           videoUrl: "",
         });
+
+        if (set.videoUrl !== undefined)
+          this.exerciseData.sets[idx].videoUrl = set.videoUrl;
       });
+
+      if (this.copiedExerciseData.exerciseNote) {
+        this.changeExerciseNote(false);
+        this.exerciseData.exerciseNote = this.copiedExerciseData.exerciseNote;
+      }
     }
     this.$emit("emitExerciseData", this.exerciseData);
   },
@@ -153,6 +210,12 @@ export default Vue.extend({
           if (vidData.setVideoIdx === setIdx) itDoes = true;
         });
       }
+
+      if (
+        this.exerciseData.sets[setIdx].videoUrl !== "" &&
+        this.exerciseData.sets[setIdx] !== undefined
+      )
+        itDoes = true;
       return itDoes;
     },
     returnUniqueId(setVideoIdx: number) {
@@ -191,28 +254,30 @@ export default Vue.extend({
         this.exerciseData.videoData.splice(videoDataSetIdx, 1);
       }
     },
+    changeExerciseNote(remove: boolean) {
+      if (remove) {
+        this.userWantsToAddNote = false;
+        this.exerciseData.exerciseNote = "";
+      } else this.userWantsToAddNote = true;
+    },
   },
   watch: {
     exerciseData: {
       deep: true,
-      handler(changedData) {
-        this.$emit("emitExerciseData", changedData);
+      handler(newValue, oldValue) {
+        if (newValue !== oldValue) this.$emit("emitExerciseData", newValue);
       },
     },
   },
   computed: {
     getExerciseSuggestions() {
-      return this.$store.getters.getUserData.exercises;
+      return store.getters.getUserData.exercises;
     },
   },
 });
 </script>
 
 <style scoped>
-.hoverable {
-  cursor: pointer;
-}
-
 .custom-icon-fontsize {
   font-size: 2rem;
 }
@@ -221,7 +286,8 @@ export default Vue.extend({
   display: none;
 }
 
-/* * {
-  outline: 1px solid red;
-} */
+.disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+}
 </style>

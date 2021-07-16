@@ -33,6 +33,7 @@
 
 <script lang="ts">
 import { firebaseApp } from "@/firebase";
+import router from "@/router";
 import Vue from "vue";
 export default Vue.extend({
   data() {
@@ -42,12 +43,12 @@ export default Vue.extend({
     };
   },
   methods: {
-    signInUser() {
-      firebaseApp
+    async signInUser() {
+      await firebaseApp
         .auth()
         .signInWithEmailAndPassword(this.email, this.password)
         .then((res) => {
-          this.$router.push("/");
+          router.push("/");
           console.log(res);
         })
         .catch((err) => {

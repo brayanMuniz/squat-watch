@@ -8,18 +8,32 @@
             <form @submit.prevent="uploadWorkout">
               <div class="container-fluid">
                 <div class="row">
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
-                      <label for="Workout Name">Workout Name: </label>
+                      <label for="Workout Name"
+                        >Workout Name:
+                        <i
+                          class="bi bi-journal-plus"
+                          v-if="!userWantsToAddNote"
+                          @click="changeWorkoutNote(false)"
+                        ></i>
+
+                        <i
+                          class="bi bi-journal-minus"
+                          v-if="userWantsToAddNote"
+                          @click="changeWorkoutNote(true)"
+                        ></i
+                      ></label>
                       <input
                         v-model.trim="workoutName"
                         type="text"
                         class="form-control"
                         id="workoutName"
+                        required
                       />
                     </div>
                   </div>
-                  <div class="col-sm-6">
+                  <div class="col-sm-6 col-md-4">
                     <div class="form-group">
                       <label for="Workout Name">Date: </label>
                       <input
@@ -27,7 +41,21 @@
                         type="date"
                         class="form-control"
                         id="workoutDate"
+                        required
                       />
+                    </div>
+                  </div>
+                  <div class="col-sm-12 col-md-4">
+                    <div v-if="userWantsToAddNote">
+                      <label for="workoutNote" class="form-label"
+                        >Workout Note:
+                      </label>
+                      <textarea
+                        v-model.trim="workoutNote"
+                        class="form-control"
+                        id="workoutNote"
+                        rows="3"
+                      ></textarea>
                     </div>
                   </div>
                 </div>
@@ -47,7 +75,7 @@
                 <br />
               </div>
 
-              <div class="row">
+              <div class="row mt-2">
                 <div class="col">
                   <button
                     type="button"
@@ -81,7 +109,7 @@
 
         <div class="col-md-4 px-0">
           <div
-            class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
+            class="container-fluid row row-cols-1 row-cols-xxl-2"
           >
             <div
               class="col"
@@ -104,7 +132,7 @@
 
                   <div class="row">
                     <div class="col">Exercise</div>
-                    <div class="col">Best Set</div>
+                    <div class="col text-end">Best Set</div>
                   </div>
                   <div
                     class="row lh-1"
@@ -114,7 +142,7 @@
                     <div class="col">
                       {{ exercise.sets.length }} x {{ exercise.exerciseName }}
                     </div>
-                    <div class="col">
+                    <div class="col text-end">
                       {{ getBestSetAsString(exercise.sets) }}
                     </div>
                   </div>
@@ -140,25 +168,29 @@ import {
   VideoData,
   WorkingSet,
   Workout,
+  getBestSetAsString,
 } from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
 import Navbar from "@/components/Navbar.vue";
+import router from "@/router";
 
 export default Vue.extend({
   data() {
     return {
       workoutName: "",
       workoutDate: moment().format("YYYY-MM-DD"), // write it this way in order to not get error
+      workoutNote: "",
       amountOfExercises: { amount: 0, copiedExerciseData: Array<Exercise>() },
       exercises: Array<Exercise>(),
+      userWantsToAddNote: false,
       uploading: false,
       poggersUpload: "0%",
     };
   },
   async mounted() {
     if (store.getters.getMyUID === undefined) {
-      this.$router.push("/");
+      router.push("/");
     }
   },
   methods: {
@@ -174,10 +206,18 @@ export default Vue.extend({
         });
       }
     },
+    changeWorkoutNote(remove: boolean) {
+      if (remove) {
+        this.userWantsToAddNote = false;
+        this.workoutNote = "";
+      } else this.userWantsToAddNote = true;
+    },
     async uploadWorkout() {
       const myUid: string | undefined = store.getters.getMyUID;
       if (myUid === undefined) {
         alert("You are not signed in.");
+      } else if (this.exercises.length < 1) {
+        alert("Have at least one exercise");
       } else {
         // Date in MM-DD-YYYY
         let formattedDate = moment(this.workoutDate).format("MM-DD-YYYY");
@@ -194,6 +234,8 @@ export default Vue.extend({
           exercises: this.exercises,
         };
 
+        if (this.workoutNote !== "") workout["workoutNote"] = this.workoutNote;
+
         let addNewExerciseToUserData: Array<string> = [];
 
         // Sets path to document
@@ -209,6 +251,10 @@ export default Vue.extend({
           let exerciseName: string = workout.exercises[exercise].exerciseName;
           if (!this.userHasExerciseLogged(exerciseName))
             addNewExerciseToUserData.push(exerciseName);
+
+          // If note is empty, delete it
+          if (!workout.exercises[exercise].exerciseNote)
+            delete workout.exercises[exercise].exerciseNote;
 
           // Do not upload if the file exceeds the storage of 10 mb
           if (workout.exercises[exercise].videoData) {
@@ -260,8 +306,9 @@ export default Vue.extend({
         }
         batch.set(userFirestoreWorkoutPath, workout);
 
+        // Update user doc of what exercises user does
         if (addNewExerciseToUserData.length > 0) {
-          let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
+          let newExercises: Array<string> = store.getters.getUserData.exercises.concat(
             addNewExerciseToUserData
           );
           const userDataDoc = firebaseApp
@@ -271,6 +318,32 @@ export default Vue.extend({
 
           batch.update(userDataDoc, {
             exercises: newExercises,
+          });
+        }
+
+        // Update /users/exercises collection
+        let pathToExercisesCollection = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(myUid)
+          .collection("exercises");
+
+        for (let exercise in workout.exercises) {
+          let data: any = {};
+          data[formattedDate] = {
+            setsDone: workout.exercises[exercise].sets,
+            workoutName: this.workoutName,
+            exerciseNote: "",
+          };
+
+          if (workout.exercises[exercise].exerciseNote)
+            data[formattedDate]["exerciseNote"] =
+              workout.exercises[exercise].exerciseNote;
+          else delete data[formattedDate]["exerciseNote"];
+
+          let exerciseName: string = workout.exercises[exercise].exerciseName;
+          batch.set(pathToExercisesCollection.doc(exerciseName), data, {
+            merge: true,
           });
         }
 
@@ -286,12 +359,6 @@ export default Vue.extend({
             console.error("Batch no good SADGE :(");
           });
       }
-    },
-    copyWorkoutToForm(workout: Workout) {
-      this.amountOfExercises.amount = 0;
-      this.amountOfExercises.copiedExerciseData = workout.exercises;
-      this.workoutName = workout.name;
-      this.amountOfExercises.amount = this.amountOfExercises.copiedExerciseData.length;
     },
     // Component Data Sync ===================================
     addExercise() {
@@ -322,29 +389,21 @@ export default Vue.extend({
         this.exercises.push(changedData);
       }
     },
+    // Visual helpers
+    copyWorkoutToForm(workout: Workout) {
+      this.amountOfExercises.amount = 0;
+      this.amountOfExercises.copiedExerciseData = workout.exercises;
+      this.workoutName = workout.name;
+      this.amountOfExercises.amount = this.amountOfExercises.copiedExerciseData.length;
+    },
     userHasExerciseLogged(exerciseName: string): boolean {
       let isLogged = false;
-      if (this.$store.getters.getUserData.exercises.includes(exerciseName))
+      if (store.getters.getUserData.exercises.includes(exerciseName))
         isLogged = true;
       return isLogged;
     },
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30));
-    },
     getBestSetAsString(sets: Array<WorkingSet>): string {
-      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
-        sets[0].weight,
-        sets[0].reps
-      );
-
-      sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
-          bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
-        }
-      });
-      return bestSet;
+      return getBestSetAsString(sets);
     },
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");
@@ -352,7 +411,7 @@ export default Vue.extend({
   },
   computed: {
     userPreviousWorkouts() {
-      return this.$store.getters.getSavedWorkoutData;
+      return store.getters.getSavedWorkoutData;
     },
   },
   components: {
@@ -361,9 +420,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style scoped>
-.hoverable {
-  cursor: pointer;
-}
-</style>

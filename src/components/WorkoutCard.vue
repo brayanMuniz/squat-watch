@@ -84,64 +84,26 @@ export default Vue.extend({
   },
 
   methods: {
-    // Todo: Convert this into a batch
     async deleteWorkout() {
       let batch = firebaseApp.firestore().batch();
-      let refToExerciseDoc = firebaseApp
-        .firestore()
-        .collection("users")
-        .doc(store.getters.getMyUID)
-        .collection("exercises")
-        .doc(this.propWorkoutData.name);
 
       // Delete from exercise collection =================================
-      let deleteMeData: any = {};
-      deleteMeData[
-        this.propWorkoutData.date
-      ] = firebase.firestore.FieldValue.delete();
-      batch.update(refToExerciseDoc, deleteMeData);
+      for (let exercise in this.propWorkoutData.exercises) {
+        let exerciseData = this.propWorkoutData.exercises[exercise];
+        let refToExerciseDoc = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(store.getters.getMyUID)
+          .collection("exercises")
+          .doc(exerciseData.exerciseName);
 
-      // Delete exercise document if it is empty =================================
-      let docIsEmpty = false;
-
-      await refToExerciseDoc
-        .get()
-        .then(async (doc) => {
-          if (doc.exists) {
-            let count = 0;
-            for (var k in doc.data()) {
-              count++;
-            }
-            if (count == 0) {
-              docIsEmpty = true;
-              // Get exercises [] from userData and delete the one not in use anymore
-              let newArrayWithRemovedExercise: Array<string> =
-                store.getters.getUserData.exercises;
-              let removedIdx = -1;
-
-              newArrayWithRemovedExercise.forEach((exercise, idx) => {
-                if (exercise == this.propWorkoutData.name) {
-                  removedIdx = idx;
-                }
-              });
-              if (removedIdx !== -1)
-                newArrayWithRemovedExercise.splice(removedIdx, 1);
-              // Replace exercises[] in userData
-              let userDocRef = firebaseApp
-                .firestore()
-                .collection("users")
-                .doc(store.getters.getMyUID);
-              batch.update(userDocRef, {
-                exercises: newArrayWithRemovedExercise,
-              });
-            }
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-
-      if (docIsEmpty) await refToExerciseDoc.delete();
+        let deleteMeData: any = {};
+        deleteMeData[
+          this.propWorkoutData.date
+        ] = firebase.firestore.FieldValue.delete();
+        console.log(deleteMeData);
+        batch.update(refToExerciseDoc, deleteMeData);
+      }
 
       // Delete Videos From Workout ===========================================
       let workoutStorageRef = firebaseApp
@@ -183,10 +145,63 @@ export default Vue.extend({
         .then(() => {
           alert("Your workout has been deleted.");
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error(err);
           alert("There was a problem deleting your workout.");
-          console.error("Batch no good SADGE :(");
         });
+
+      // Since the document can not be "caught" empty after batch update, another loop is needed
+      for (let exercise in this.propWorkoutData.exercises) {
+        let exerciseData = this.propWorkoutData.exercises[exercise];
+        let refToExerciseDoc = firebaseApp
+          .firestore()
+          .collection("users")
+          .doc(store.getters.getMyUID)
+          .collection("exercises")
+          .doc(exerciseData.exerciseName);
+
+        // Delete exercise document if it is empty =================================
+        let docIsEmpty = false;
+
+        await refToExerciseDoc
+          .get()
+          .then(async (doc) => {
+            if (doc.exists) {
+              let count = 0;
+              for (var k in doc.data()) {
+                count++;
+              }
+              if (count == 0) {
+                docIsEmpty = true;
+                // Get exercises [] from userData and delete the one not in use anymore
+                let newArrayWithRemovedExercise: Array<string> =
+                  store.getters.getUserData.exercises;
+                let removedIdx = -1;
+
+                newArrayWithRemovedExercise.forEach((exercise, idx) => {
+                  if (exercise == exerciseData.exerciseName) {
+                    removedIdx = idx;
+                  }
+                });
+                if (removedIdx !== -1)
+                  newArrayWithRemovedExercise.splice(removedIdx, 1);
+                // Replace exercises[] in userData
+                let userDocRef = firebaseApp
+                  .firestore()
+                  .collection("users")
+                  .doc(store.getters.getMyUID);
+                userDocRef.update({
+                  exercises: newArrayWithRemovedExercise,
+                });
+              }
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+
+        if (docIsEmpty) await refToExerciseDoc.delete();
+      }
     },
     getBestSetAsString(sets: Array<WorkingSet>): string {
       return getBestSetAsString(sets);

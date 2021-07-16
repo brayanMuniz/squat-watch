@@ -1,3 +1,5 @@
+import { Workout } from "./workout.interface";
+
 export class User {
   userName: string;
   dateJoined: string;
@@ -42,6 +44,7 @@ export interface User {
   exercises: Array<string>;
   initialLifts: Array<BestLifts>;
   age: string;
+  workoutPlan?: Array<Workout>;
   weight?: number;
   description?: string;
   profileImageUrl?: string;

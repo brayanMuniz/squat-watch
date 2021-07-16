@@ -109,7 +109,7 @@
 
         <div class="col-md-4 px-0">
           <div
-            class="container-fluid row row-cols-1 row-cols-md-1 row-cols-xxl-2"
+            class="container-fluid row row-cols-1 row-cols-xxl-2"
           >
             <div
               class="col"
@@ -168,10 +168,12 @@ import {
   VideoData,
   WorkingSet,
   Workout,
+  getBestSetAsString,
 } from "@/interfaces/workout.interface";
 import moment from "moment";
 import store from "@/store";
 import Navbar from "@/components/Navbar.vue";
+import router from "@/router";
 
 export default Vue.extend({
   data() {
@@ -188,7 +190,7 @@ export default Vue.extend({
   },
   async mounted() {
     if (store.getters.getMyUID === undefined) {
-      this.$router.push("/");
+      router.push("/");
     }
   },
   methods: {
@@ -306,7 +308,7 @@ export default Vue.extend({
 
         // Update user doc of what exercises user does
         if (addNewExerciseToUserData.length > 0) {
-          let newExercises: Array<string> = this.$store.getters.getUserData.exercises.concat(
+          let newExercises: Array<string> = store.getters.getUserData.exercises.concat(
             addNewExerciseToUserData
           );
           const userDataDoc = firebaseApp
@@ -362,7 +364,6 @@ export default Vue.extend({
     addExercise() {
       this.amountOfExercises.amount++; // A new component will be rendered off of this and data will sync up automotically
     },
-
     removeExerciseComp(exerciseData: Exercise) {
       let exerciseIdx: number | undefined = undefined;
 
@@ -397,27 +398,12 @@ export default Vue.extend({
     },
     userHasExerciseLogged(exerciseName: string): boolean {
       let isLogged = false;
-      if (this.$store.getters.getUserData.exercises.includes(exerciseName))
+      if (store.getters.getUserData.exercises.includes(exerciseName))
         isLogged = true;
       return isLogged;
     },
-    calculateOneRepMax(weight: number, reps: number): number {
-      return Math.round(weight * (1 + reps / 30));
-    },
     getBestSetAsString(sets: Array<WorkingSet>): string {
-      let bestSet = `${sets[0].weight} x ${sets[0].reps}`;
-      let bestSetCalculated: number = this.calculateOneRepMax(
-        sets[0].weight,
-        sets[0].reps
-      );
-
-      sets.forEach((set) => {
-        if (this.calculateOneRepMax(set.weight, set.reps) > bestSetCalculated) {
-          bestSet = `${set.weight} x ${set.reps}`;
-          bestSetCalculated = this.calculateOneRepMax(set.weight, set.reps);
-        }
-      });
-      return bestSet;
+      return getBestSetAsString(sets);
     },
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");
@@ -425,7 +411,7 @@ export default Vue.extend({
   },
   computed: {
     userPreviousWorkouts() {
-      return this.$store.getters.getSavedWorkoutData;
+      return store.getters.getSavedWorkoutData;
     },
   },
   components: {
@@ -434,9 +420,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style scoped>
-.hoverable {
-  cursor: pointer;
-}
-</style>

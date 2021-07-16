@@ -41,7 +41,6 @@ export default new Vuex.Store({
     upateMyProfilePicture(state, newProfilePicture: string) {
       state.profilePictureUrl = newProfilePicture;
     },
-    // Todo: add on dont totally replace
     updateSavedWorkoutData(
       state,
       newWorkoutData: {
@@ -75,7 +74,7 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    async retriveWorkoutData({ commit }, details) {
+    async retriveWorkoutData({ getters, commit }, details) {
       const workoutData: Array<Workout> = [];
       let error = false;
       const workoutPath = firebaseApp
@@ -99,6 +98,7 @@ export default new Vuex.Store({
         },
       };
 
+      // Loop over the dates and if the document exist add to workoutData array
       for (const date in details.dates) {
         await workoutPath
           .doc(details.dates[date])
@@ -113,6 +113,16 @@ export default new Vuex.Store({
             console.error(err);
           });
       }
+
+      // If the data you are getting is your own, save it to the store.
+      if (details.uid === getters.getMyUID) {
+        commit("updateSavedWorkoutData", {
+          startDate: details.dates[0],
+          endDate: details.dates[details.dates.length - 1],
+          workoutData: workoutData,
+        });
+      }
+
       if (error) return Promise.reject("Problem Getting Data For User");
       return Promise.resolve(workoutData);
     },

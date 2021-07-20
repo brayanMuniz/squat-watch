@@ -110,23 +110,12 @@ export default Vue.extend({
     };
   },
   async created() {
-    let dates: Array<string> = [];
-    // Generates array with given dates, if no dates, list of dates for month
-    if (this.startDate && this.endDate) {
-      dates = generateArrayOfDates(this.startDate, this.endDate);
-    } else {
-      dates = generateArrayOfDates(
-        moment()
-          .subtract(1, "month")
-          .format("MM-DD-YYYY"),
-        moment().format("MM-DD-YYYY")
-      );
-    }
-
-    let workoutData: Array<Workout> = [];
-    if (this.userDataWrite && this.userUIDWrite && this.userUIDWrite) {
+    // If you have gotten the data from /browse
+    if (this.userDataWrite && this.userUIDWrite) {
       this.userDataReady = true;
-    } else {
+    }
+    // other wise you went into /browse/:userId fresh and you have to get data
+    else {
       if (!this.userUIDWrite) {
         await store
           .dispatch(
@@ -154,6 +143,21 @@ export default Vue.extend({
       }
     }
 
+    let dates: Array<string> = [];
+    // Generates array with given dates, if no dates, list of dates for month
+    if (this.startDate && this.endDate) {
+      dates = generateArrayOfDates(this.startDate, this.endDate);
+    } else {
+      dates = generateArrayOfDates(
+        moment()
+          .subtract(1, "month")
+          .format("MM-DD-YYYY"),
+        moment().format("MM-DD-YYYY")
+      );
+    }
+
+    let workoutData: Array<Workout> = [];
+
     await store
       .dispatch("retriveWorkoutData", {
         dates: dates,
@@ -172,7 +176,7 @@ export default Vue.extend({
     );
     if (convertedData.length > 0) {
       this.allExerciseChartData = convertedData;
-      this.allWorkouts = workoutData;
+      this.allWorkouts = workoutData.reverse();
       this.dataReady = true;
     } else {
       this.noDataInThisDateRange = true;

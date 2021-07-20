@@ -31,7 +31,7 @@ export default Vue.extend({
     };
   },
   async created() {
-    this.historyOfWorkouts = store.getters.getSavedWorkoutData.workoutData;
+    this.historyOfWorkouts = store.getters.getSavedWorkoutData.workoutData.reverse();
     const oneMonthAgo: string = moment()
       .subtract(1, "month")
       .format("MM-DD-YYYY");

@@ -114,7 +114,7 @@ export default Vue.extend({
       currentlySelectedExercise: "Squat",
       noDataInThisDateRange: false,
       startDate: moment()
-        .subtract(1, "week")
+        .subtract(1, "month")
         .format("MM-DD-YYYY"),
       endDate: moment().format("MM-DD-YYYY"),
       // Calendar Component
@@ -164,7 +164,7 @@ export default Vue.extend({
             console.error(err);
           });
       }
-      this.allWorkouts = workoutData;
+      this.allWorkouts = workoutData.reverse();
       let convertedData:
         | Array<ExerciseChartData>
         | undefined = covertWorkoutDataToChartData(workoutData);

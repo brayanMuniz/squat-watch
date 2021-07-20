@@ -124,28 +124,34 @@ export default Vue.extend({
     }
 
     let workoutData: Array<Workout> = [];
+    if (this.userDataWrite && this.userUIDWrite && this.userUIDWrite) {
+      this.userDataReady = true;
+    } else {
+      if (!this.userUIDWrite) {
+        await store
+          .dispatch(
+            "getUserUidFromUserName",
+            router.currentRoute.params.userName
+          )
+          .then((res) => {
+            this.userUIDWrite = res.belongsTo;
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
 
-    if (!this.userUIDWrite) {
-      await store
-        .dispatch("getUserUidFromUserName", router.currentRoute.params.userName)
-        .then((res) => {
-          this.userUIDWrite = res.belongsTo;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-
-    if (!this.userDataWrite) {
-      await store
-        .dispatch("getUserData", this.userUIDWrite)
-        .then((res) => {
-          this.userDataWrite = res;
-          this.userDataReady = true;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+      if (!this.userDataWrite) {
+        await store
+          .dispatch("getUserData", this.userUIDWrite)
+          .then((res) => {
+            this.userDataWrite = res;
+            this.userDataReady = true;
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
     }
 
     await store

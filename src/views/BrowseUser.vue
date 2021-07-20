@@ -23,41 +23,54 @@
 
           <!-- Line Chart, Table, Video Component -->
           <div class="container-fluid" v-if="dataReady">
-            <ExerciseChartTableVideo
-              v-for="exercise in allExerciseChartData"
-              :key="exercise.exerciseName"
-              :exerciseData="exercise"
-            />
+            <div class="row row-cols-1 row-cols-xl-2">
+              <div
+                class="col"
+                v-for="exercise in allExerciseChartData"
+                :key="exercise.exerciseName"
+              >
+                <ExerciseChartTableVideo :exerciseData="exercise" />
+              </div>
+            </div>
           </div>
         </div>
         <div class="col-lg-3">
           <!-- TODO: make image smaller -->
           <div class="container-fluid">
-            <div class="card" style="width: 18rem;">
-              <img
-                v-if="userDataWrite.profileImageUrl"
-                :src="userDataWrite.profileImageUrl"
-                class="card-img-top"
-                alt="userProfileImage"
-              />
-              <div class="card-body">
-                <h5 class="card-title">
-                  <div class="row">
-                    <div class="col">Age: {{ userDataWrite.age }}</div>
-                    <div class="col">Weight: {{ userDataWrite.weight }}</div>
+            <div class="card mb-3" style="max-width: 540px;">
+              <div class="row g-0">
+                <div class="col-md-4">
+                  <img
+                    v-if="userDataWrite.profileImageUrl"
+                    :src="userDataWrite.profileImageUrl"
+                    class="img-fluid rounded-start"
+                    alt="userProfileImage"
+                  />
+                </div>
+                <div class="col-md-8">
+                  <div class="card-body">
+                    <h5 class="card-title">Short Descritoin</h5>
+                    <p class="card-text">
+                      List Of Best Lifts
+                    </p>
+                    <p class="card-text">
+                      <small class="text-muted">Most Recent Workout Here</small>
+                    </p>
                   </div>
-                </h5>
+                </div>
               </div>
             </div>
           </div>
-          <div class="row">
-            <div class="col">
-              <WorkoutCard
-                class="my-2"
-                v-for="(workout, idx) in allWorkouts"
-                :key="idx"
-                :propWorkoutData="workout"
-              />
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col">
+                <WorkoutCard
+                  class="my-2"
+                  v-for="(workout, idx) in allWorkouts"
+                  :key="idx"
+                  :propWorkoutData="workout"
+                />
+              </div>
             </div>
           </div>
         </div>

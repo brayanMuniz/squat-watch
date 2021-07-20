@@ -2,7 +2,7 @@
   <div>
     <Navbar />
     <div class="container-fluid">
-      <div class="row row-cols-1 row-cols-md-3">
+      <div class="row row-cols-1 row-cols-md-3" v-if="dataReady">
         <div class="col" v-for="(user, idx) in usersData" :key="idx">
           <div class="card">
             <router-link
@@ -57,6 +57,7 @@ export default Vue.extend({
   data() {
     return {
       usersData: Array<any>(),
+      dataReady: false,
     };
   },
   mounted() {
@@ -75,8 +76,10 @@ export default Vue.extend({
             this.usersData.push({
               data: doc.data(),
               uid: doc.id,
+              userName: doc.data().userName,
             });
           });
+          this.dataReady = true;
         });
     },
   },

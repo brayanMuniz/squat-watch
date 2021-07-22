@@ -126,6 +126,59 @@ export default new Vuex.Store({
       if (error) return Promise.reject("Problem Getting Data For User");
       return Promise.resolve(workoutData);
     },
+    async getUserData({ getters }, userUID) {
+      let userData: any = {};
+      let problem = false;
+      await firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(userUID)
+        .get()
+        .then((res) => {
+          if (res.exists) userData = res.data();
+          else problem = true;
+        })
+        .catch((err) => {
+          problem = true;
+        });
+      if (problem) return Promise.reject("Problem getting Users Data");
+      return Promise.resolve(userData);
+    },
+    async fetchAndUpdateUserData({ getters, commit }) {
+      await firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(getters.getMyUID)
+        .get()
+        .then((res) => {
+          if (res.exists) {
+            commit("updateUserData", res.data());
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    },
+    async getUserUidFromUserName({ getters }, userName) {
+      let userData: any = {};
+      let problem = false;
+      await firebaseApp
+        .firestore()
+        .collection("userNames")
+        .doc(userName)
+        .get()
+        .then((res) => {
+          if (res.exists) {
+            userData = res.data();
+          }
+        })
+        .catch((err) => {
+          problem = true;
+        });
+      if (problem)
+        return Promise.reject("There was a problem getting users userName");
+      return Promise.resolve(userData);
+    },
   },
   modules: {},
 });

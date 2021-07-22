@@ -58,11 +58,15 @@
 
     <!-- Line Chart, Table, Video Component -->
     <div class="container-fluid" v-if="dataReady">
-      <ExerciseChartTableVideo
-        v-for="exercise in allExerciseChartData"
-        :key="exercise.exerciseName"
-        :exerciseData="exercise"
-      />
+      <div class="row row-cols-1 row-cols-xl-2">
+        <div
+          class="col"
+          v-for="exercise in allExerciseChartData"
+          :key="exercise.exerciseName"
+        >
+          <ExerciseChartTableVideo :exerciseData="exercise" />
+        </div>
+      </div>
     </div>
 
     <!-- History of Workouts -->
@@ -74,6 +78,7 @@
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
         :propWorkoutData="workout"
+        :expandable="true"
       />
     </div>
 
@@ -114,7 +119,7 @@ export default Vue.extend({
       currentlySelectedExercise: "Squat",
       noDataInThisDateRange: false,
       startDate: moment()
-        .subtract(1, "week")
+        .subtract(1, "month")
         .format("MM-DD-YYYY"),
       endDate: moment().format("MM-DD-YYYY"),
       // Calendar Component
@@ -164,7 +169,7 @@ export default Vue.extend({
             console.error(err);
           });
       }
-      this.allWorkouts = workoutData;
+      this.allWorkouts = workoutData.reverse();
       let convertedData:
         | Array<ExerciseChartData>
         | undefined = covertWorkoutDataToChartData(workoutData);

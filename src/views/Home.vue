@@ -64,7 +64,10 @@
           v-for="exercise in allExerciseChartData"
           :key="exercise.exerciseName"
         >
-          <ExerciseChartTableVideo :exerciseData="exercise" />
+          <ExerciseChartTableVideo
+            :exerciseData="exercise"
+            :favoritable="true"
+          />
         </div>
       </div>
     </div>

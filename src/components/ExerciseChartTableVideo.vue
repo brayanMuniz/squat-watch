@@ -14,20 +14,22 @@
             {{ exerciseData.exerciseName }}
           </button>
         </li>
-        
-        <li class="nav-item" v-if="isThisExerciseFavorite">
-          <i
-            class="bi bi-star-fill hoverable"
-            @click="changeFavoriteExercise(false)"
-          ></i>
-        </li>
 
-        <li class="nav-item" v-else>
-          <i
-            class="bi bi-star hoverable"
-            @click="changeFavoriteExercise(true)"
-          ></i>
-        </li>
+        <div v-if="favoritable">
+          <li class="nav-item" v-if="isThisExerciseFavorite">
+            <i
+              class="bi bi-star-fill hoverable"
+              @click="changeFavoriteExercise(false)"
+            ></i>
+          </li>
+
+          <li class="nav-item" v-else>
+            <i
+              class="bi bi-star hoverable"
+              @click="changeFavoriteExercise(true)"
+            ></i>
+          </li>
+        </div>
       </ul>
     </div>
 
@@ -136,6 +138,10 @@ export default Vue.extend({
   props: {
     exerciseData: {
       type: Object as () => ExerciseChartData,
+    },
+    favoritable: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {

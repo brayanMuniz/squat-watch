@@ -1,76 +1,98 @@
 <template>
-  <div class="row border border-1 m-2 rounded bg-light text-dark">
-    <!-- LineChart  -->
-    <div class="col-lg-4 col-sm-12">
-      <div class="container-fluid">
-        <!-- :options prop needs to be passed in or there will be an error -->
-        <LineChart
-          :chartData="exerciseData.chartData"
-          :options="chartOptions"
-          :workingSets="exerciseData.setsWithDates"
-          :exerciseName="exerciseData.exerciseName"
-          v-on:clickedPoint="changeVideoFromExercise($event)"
-        />
-      </div>
+  <div class="card text-center">
+    <div class="card-header">
+      <ul class="nav nav-pills card-header-pills">
+        <li class="nav-item">
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-bs-toggle="collapse"
+            :data-bs-target="getRandomIdWithHash()"
+            aria-expanded="false"
+            :aria-controls="randomId"
+          >
+            {{ exerciseData.exerciseName }}
+          </button>
+        </li>
+      </ul>
     </div>
-    <!-- Table -->
-    <div class="col-lg-4 col-sm-12">
-      <table class="table container-fluid">
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th>1 Rep Max</th>
-            <th scope="col">Best Set</th>
-            <th scope="col"># Of Sets</th>
-            <th scope="col">Video</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(e, idx) in exerciseData.setsWithDates" :key="idx">
-            <th scope="row">{{ e.date }}</th>
-            <td>{{ findBestOneRepMax(e.sets) }}</td>
-            <td>{{ getBestSetAsString(e.sets) }}</td>
-            <td>{{ e.sets.length }}</td>
-            <td v-if="getVideoUrlFromSets(e.sets)">
-              <i
-                class="bi bi-play-btn-fill hoverable"
-                @click="
-                  changeVideoFromExercise({
-                    exerciseName: exerciseData.exerciseName,
-                    videoUrl: getVideoUrlFromSets(e.sets),
-                  })
-                "
-              ></i>
-            </td>
-            <td v-else><i class="bi bi-slash-circle"></i></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <!-- Video -->
+
     <div
-      v-if="exerciseData.videoReady"
-      class="col-lg-4 col-sm-12 container-fluid"
+      class="card-body row border border-1 m-2 rounded bg-light text-dark collapse"
+      :id="randomId"
     >
+      <!-- LineChart  -->
+      <div class="col-lg-4 col-sm-12">
+        <div class="container-fluid">
+          <!-- :options prop needs to be passed in or there will be an error -->
+          <LineChart
+            :chartData="exerciseData.chartData"
+            :options="chartOptions"
+            :workingSets="exerciseData.setsWithDates"
+            :exerciseName="exerciseData.exerciseName"
+            v-on:clickedPoint="changeVideoFromExercise($event)"
+          />
+        </div>
+      </div>
+      <!-- Table -->
+      <div class="col-lg-4 col-sm-12">
+        <table class="table container-fluid">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th>1 Rep Max</th>
+              <th scope="col">Best Set</th>
+              <th scope="col"># Of Sets</th>
+              <th scope="col">Video</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(e, idx) in exerciseData.setsWithDates" :key="idx">
+              <th scope="row">{{ e.date }}</th>
+              <td>{{ findBestOneRepMax(e.sets) }}</td>
+              <td>{{ getBestSetAsString(e.sets) }}</td>
+              <td>{{ e.sets.length }}</td>
+              <td v-if="getVideoUrlFromSets(e.sets)">
+                <i
+                  class="bi bi-play-btn-fill hoverable"
+                  @click="
+                    changeVideoFromExercise({
+                      exerciseName: exerciseData.exerciseName,
+                      videoUrl: getVideoUrlFromSets(e.sets),
+                    })
+                  "
+                ></i>
+              </td>
+              <td v-else><i class="bi bi-slash-circle"></i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Video -->
       <div
         v-if="exerciseData.videoReady"
-        class="container-fluid ratio ratio-1x1"
+        class="col-lg-4 col-sm-12 container-fluid"
       >
-        <video ref="videoPlayer" width="320" height="240" autoplay controls>
-          <source :src="exerciseData.videoUrl" />
-          Your browser does not support video.
-        </video>
-      </div>
+        <div
+          v-if="exerciseData.videoReady"
+          class="container-fluid ratio ratio-1x1"
+        >
+          <video ref="videoPlayer" width="320" height="240" autoplay controls>
+            <source :src="exerciseData.videoUrl" />
+            Your browser does not support video.
+          </video>
+        </div>
 
-      <div
-        class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
-        role="status"
-        v-else-if="exerciseData.videoLoading"
-      >
-        <span class="visually-hidden">Loading...</span>
+        <div
+          class="spinner-border d-flex justify-content-center col-lg-4 col-sm-12 "
+          role="status"
+          v-else-if="exerciseData.videoLoading"
+        >
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
+      <div v-else class="col-lg-4 col-sm-12"></div>
     </div>
-    <div v-else class="col-lg-4 col-sm-12"></div>
   </div>
 </template>
 
@@ -83,6 +105,17 @@ import {
   ExerciseChartData,
   getBestSetAsString,
 } from "@/interfaces/workout.interface";
+
+function makeid(): string {
+  var result = "";
+  var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  var charactersLength = characters.length;
+  for (var i = 0; i < 12; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
 export default Vue.extend({
   props: {
     exerciseData: {
@@ -98,7 +131,12 @@ export default Vue.extend({
           callbacks: {},
         },
       },
+      randomIdTest: "randomIdTest",
+      randomId: makeid(),
     };
+  },
+  created() {
+    console.log(this.randomId);
   },
   methods: {
     getBestSetAsString(sets: Array<WorkingSet>): string {
@@ -131,6 +169,9 @@ export default Vue.extend({
           this.exerciseData.videoReady = false;
         }
       }
+    },
+    getRandomIdWithHash(): string {
+      return "#" + this.randomId;
     },
   },
   components: {

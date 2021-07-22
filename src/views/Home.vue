@@ -74,6 +74,7 @@
         v-for="(workout, workoutIdx) in allWorkouts"
         :key="workoutIdx"
         :propWorkoutData="workout"
+        :expandable="true"
       />
     </div>
 

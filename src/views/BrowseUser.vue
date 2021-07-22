@@ -54,7 +54,7 @@
                       List Of Best Lifts
                     </p>
                     <p class="card-text">
-                      <small class="text-muted">Most Recent Workout Here</small>
+                      <small class="text-muted">Last Worked Out: ....</small>
                     </p>
                   </div>
                 </div>
@@ -69,6 +69,7 @@
                   v-for="(workout, idx) in allWorkouts"
                   :key="idx"
                   :propWorkoutData="workout"
+                  :expandable="true"
                 />
               </div>
             </div>

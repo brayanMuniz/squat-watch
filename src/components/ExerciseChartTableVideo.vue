@@ -52,7 +52,10 @@
       v-if="exerciseData.videoReady"
       class="col-lg-4 col-sm-12 container-fluid"
     >
-      <div v-if="exerciseData.videoReady" class="container-fluid">
+      <div
+        v-if="exerciseData.videoReady"
+        class="container-fluid ratio ratio-1x1"
+      >
         <video ref="videoPlayer" width="320" height="240" autoplay controls>
           <source :src="exerciseData.videoUrl" />
           Your browser does not support video.

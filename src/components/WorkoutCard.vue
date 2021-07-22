@@ -1,50 +1,84 @@
 <template>
   <div class="card text-dark bg-light px-0">
+    <div class="card-header">
+      {{ cardWorkoutData.name }}
+
+      <router-link
+        v-if="ableToEditWorkout"
+        class="btn btn-primary btn-sm"
+        :to="{
+          name: 'Update Workout',
+          params: {
+            date: cardWorkoutData.date,
+            workoutData: cardWorkoutData,
+          },
+        }"
+        ><i class="bi bi-pen-fill"></i
+      ></router-link>
+
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        @click="deleteWorkout"
+        v-if="ableToDeleteWorkout"
+      >
+        <i class="bi bi-x-square"></i>
+      </button>
+      <button
+        @click="makeCardExpanded = !makeCardExpanded"
+        v-if="expandable"
+        class="btn btn-primary btn-sm"
+      >
+        <i class="bi bi-arrows-expand"></i>
+      </button>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">
-        {{ cardWorkoutData.name }}
-
-        <router-link
-          v-if="ableToEditWorkout"
-          class="btn btn-primary btn-sm"
-          :to="{
-            name: 'Update Workout',
-            params: {
-              date: cardWorkoutData.date,
-              workoutData: cardWorkoutData,
-            },
-          }"
-          ><i class="bi bi-pen-fill"></i
-        ></router-link>
-
-        <button
-          type="button"
-          class="btn btn-danger btn-sm"
-          @click="deleteWorkout"
-          v-if="ableToDeleteWorkout"
-        >
-          <i class="bi bi-x-square"></i>
-        </button>
-      </h5>
       <h6 class="card-subtitle mb-2 text-muted">
         {{ dateToMonthDay(cardWorkoutData.date) }}
       </h6>
 
-      <div class="row">
+      <div class="row" v-if="makeCardExpanded">
+        <div class="col">Exercise</div>
+        <div class="col me-auto text-end">1RM</div>
+      </div>
+
+      <div class="row" v-else>
         <div class="col">Exercise</div>
         <div class="col me-auto text-end">Best Set</div>
       </div>
 
-      <div
-        class="row lh-1"
-        v-for="(exercise, idx) in cardWorkoutData.exercises"
-        :key="idx"
-      >
-        <div class="col-8 text-truncate">
-          {{ exercise.sets.length }} x {{ exercise.exerciseName }}
+      <div v-if="makeCardExpanded">
+        <div
+          class="row lh-1 mb-1"
+          v-for="(exercise, idx) in cardWorkoutData.exercises"
+          :key="idx"
+        >
+          <div class="col-12">{{ exercise.exerciseName }}</div>
+
+          <div v-for="(set, setIdx) in exercise.sets" class="row" :key="setIdx">
+            <div class="col text-truncate">
+              {{ setIdx + 1 }} {{ formatText(set.weight, set.reps) }}
+            </div>
+
+            <div class="col me-auto text-end">
+              {{ calculateOneRepMax(set.weight, set.reps) }}
+            </div>
+          </div>
         </div>
-        <div class="col-4 text-end">
-          {{ getBestSetAsString(exercise.sets) }}
+      </div>
+
+      <div v-else>
+        <div
+          class="row lh-1"
+          v-for="(exercise, idx) in cardWorkoutData.exercises"
+          :key="idx"
+        >
+          <div class="col-8 text-truncate">
+            {{ exercise.sets.length }} x {{ exercise.exerciseName }}
+          </div>
+          <div class="col-4 text-end">
+            {{ getBestSetAsString(exercise.sets) }}
+          </div>
         </div>
       </div>
     </div>
@@ -58,6 +92,7 @@ import {
   Workout,
   WorkingSet,
   getBestSetAsString,
+  calculateOneRepMax,
 } from "@/interfaces/workout.interface";
 import { firebaseApp } from "@/firebase";
 import firebase from "firebase";
@@ -75,14 +110,21 @@ export default Vue.extend({
       type: Boolean,
       default: false,
     },
+    expandable: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       cardWorkoutData: this.propWorkoutData,
       showModalDialog: false,
+      makeCardExpanded: false,
     };
   },
-
+  created() {
+    console.log(this.cardWorkoutData);
+  },
   methods: {
     async deleteWorkout() {
       let batch = firebaseApp.firestore().batch();
@@ -209,6 +251,20 @@ export default Vue.extend({
     dateToMonthDay(date: string): string {
       return moment(date).format("MMM DD");
     },
+    formatText(weight: number, reps: number): string {
+      if (weight === 0) return `${reps} Reps`;
+      return `${weight} lbs x ${reps}`;
+    },
+    calculateOneRepMax(weight: number, reps: number): number {
+      return calculateOneRepMax(weight, reps);
+    },
   },
 });
 </script>
+
+<style scoped>
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+</style>

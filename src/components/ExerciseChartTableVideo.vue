@@ -14,6 +14,20 @@
             {{ exerciseData.exerciseName }}
           </button>
         </li>
+        
+        <li class="nav-item" v-if="isThisExerciseFavorite">
+          <i
+            class="bi bi-star-fill hoverable"
+            @click="changeFavoriteExercise(false)"
+          ></i>
+        </li>
+
+        <li class="nav-item" v-else>
+          <i
+            class="bi bi-star hoverable"
+            @click="changeFavoriteExercise(true)"
+          ></i>
+        </li>
       </ul>
     </div>
 
@@ -105,8 +119,10 @@ import {
   ExerciseChartData,
   getBestSetAsString,
 } from "@/interfaces/workout.interface";
+import { firebaseApp } from "@/firebase";
+import store from "@/store";
 
-function makeid(): string {
+function makeRandomid(): string {
   var result = "";
   var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   var charactersLength = characters.length;
@@ -131,12 +147,8 @@ export default Vue.extend({
           callbacks: {},
         },
       },
-      randomIdTest: "randomIdTest",
-      randomId: makeid(),
+      randomId: makeRandomid(),
     };
-  },
-  created() {
-    console.log(this.randomId);
   },
   methods: {
     getBestSetAsString(sets: Array<WorkingSet>): string {
@@ -170,8 +182,43 @@ export default Vue.extend({
         }
       }
     },
+    async changeFavoriteExercise(makeExerciseFavorite: boolean) {
+      let refToMyDoc = firebaseApp
+        .firestore()
+        .collection("users")
+        .doc(store.getters.getMyUID);
+      let changeHappend = false;
+      let myFavoriteExercises: Array<string> =
+        store.getters.getUserData.favoriteExercises;
+
+      // Add or remove from myFavoriteExercises
+      if (makeExerciseFavorite) {
+        myFavoriteExercises.push(this.exerciseData.exerciseName);
+        changeHappend = true;
+      } else {
+        let idxOfExercise: number | -1 = myFavoriteExercises.indexOf(
+          this.exerciseData.exerciseName
+        );
+        if (idxOfExercise !== -1) {
+          myFavoriteExercises = myFavoriteExercises.splice(idxOfExercise, 1);
+        }
+        changeHappend = true;
+      }
+
+      if (changeHappend)
+        await refToMyDoc.update({
+          favoriteExercises: myFavoriteExercises,
+        });
+    },
     getRandomIdWithHash(): string {
       return "#" + this.randomId;
+    },
+  },
+  computed: {
+    isThisExerciseFavorite(): boolean {
+      let myFavoriteExercises: Array<string> =
+        store.getters.getUserData.favoriteExercises;
+      return myFavoriteExercises.includes(this.exerciseData.exerciseName);
     },
   },
   components: {

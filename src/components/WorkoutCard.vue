@@ -122,9 +122,6 @@ export default Vue.extend({
       makeCardExpanded: false,
     };
   },
-  created() {
-    console.log(this.cardWorkoutData);
-  },
   methods: {
     async deleteWorkout() {
       let batch = firebaseApp.firestore().batch();

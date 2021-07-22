@@ -274,6 +274,7 @@ export default Vue.extend({
         userName: this.userName,
         visibility: this.visibility,
         exercises: exercises,
+        favoriteExercises: []
       };
 
       if (this.profileImageUrl !== "" || this.profileImageUrl !== undefined)

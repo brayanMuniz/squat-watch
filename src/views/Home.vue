@@ -44,7 +44,7 @@
     </div>
 
     <!-- Workout plan -->
-    <div>
+    <!-- <div>
       <h4>Workout Plan:</h4>
       <div class="row" v-if="userWorkoutPlan.length > 0">
         <div class="col"></div>
@@ -54,7 +54,7 @@
           Create A Workout Plan
         </button>
       </div>
-    </div>
+    </div> -->
 
     <!-- Line Chart, Table, Video Component -->
     <div class="container-fluid" v-if="dataReady">
@@ -71,7 +71,7 @@
 
     <!-- History of Workouts -->
     <div
-      class="container-fluid mb-1 row row-cols-1 row-cols-md-4 row-cols-xl-5"
+      class="container-fluid mb-1 row row-cols-1 row-cols-md-3 row-cols-xl-5"
     >
       <WorkoutCard
         class="col mx-1"

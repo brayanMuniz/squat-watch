@@ -58,11 +58,15 @@
 
     <!-- Line Chart, Table, Video Component -->
     <div class="container-fluid" v-if="dataReady">
-      <ExerciseChartTableVideo
-        v-for="exercise in allExerciseChartData"
-        :key="exercise.exerciseName"
-        :exerciseData="exercise"
-      />
+      <div class="row row-cols-1 row-cols-xl-2">
+        <div
+          class="col"
+          v-for="exercise in allExerciseChartData"
+          :key="exercise.exerciseName"
+        >
+          <ExerciseChartTableVideo :exerciseData="exercise" />
+        </div>
+      </div>
     </div>
 
     <!-- History of Workouts -->
